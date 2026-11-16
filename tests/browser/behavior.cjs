@@ -41,8 +41,11 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     const st = await text(page, '#status');
     const clockAt = (await text(page, '#hm')) + ':' + (await text(page, '#sec'));
     ok('adhan overlay appears at Fajr', shown && fajr.startsWith(clockAt.slice(0, 4)), 'fired at ' + clockAt + ', fajr ' + fajr + ', ' + (await text(page, '#adhanEn')));
+    ok('overlay fades in (opacity transition, not a pop)', await page.$eval('#adhan', (e) => e.classList.contains('open') && getComputedStyle(e).transitionProperty.includes('opacity')));
     await page.click('#silenceBtn');
-    ok('Silence hides the overlay', await page.$eval('#adhan', (e) => e.hidden));
+    ok('overlay starts fading out on Silence', await page.$eval('#adhan', (e) => !e.classList.contains('open')));
+    await page.clock.runFor(600);
+    ok('Silence hides the overlay after the fade', await page.$eval('#adhan', (e) => e.hidden));
     ok('status counts down to iqamah during the wait', /Fajr<\/b> iqamah in/.test(await page.$eval('#status', (e) => e.innerHTML)), st);
     ok('no page errors (1)', !page.errors.length, page.errors.join(';'));
     await context.close();
@@ -61,7 +64,7 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     await page.selectOption('#s-asr', '2');
     await page.fill('#s-feed', 'http://localhost:8080/does-not-exist.json');
     await page.click('button[type=submit]');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(700);
     ok('sheet closes on save', await page.$eval('#sheet', (e) => e.hidden));
     ok('24h clock applied', (await text(page, '#hm')) === '13:23', await text(page, '#hm'));
     ok('place label applied', (await text(page, '#place')) === 'Bronx');
@@ -74,9 +77,22 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     ok('failing feed reports status and falls back', /Could not load the feed \(HTTP 404\)\. Using your manual iqamah times\./.test(fs), fs);
     await page.click('#s-reset');
     await page.click('#s-close');
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(700);
     ok('reset restores defaults', (await text(page, '#hm')) === '1:23' && (await text(page, '#place')) === 'Queens, New York');
     ok('no page errors (2)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+
+  /* 2b. first tap on the gear while sound is locked opens settings (the prototype lost it) */
+  {
+    const { context, page } = await fresh();
+    await page.clock.setFixedTime(new Date('2026-11-16T13:23:05-05:00'));
+    await page.goto(URL_);
+    const pillBefore = await page.$eval('#soundPill', (e) => !e.hidden);
+    await page.click('#setBtn');
+    await page.waitForTimeout(600);
+    ok('first tap on the gear opens settings while the sound pill is showing', pillBefore && !(await page.$eval('#sheet', (e) => e.hidden)));
+    ok('sound unlocked by that tap', await page.$eval('#soundPill', (e) => e.hidden));
     await context.close();
   }
 

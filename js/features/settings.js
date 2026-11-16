@@ -10,7 +10,7 @@
        commit(draft),             // optional, async work before saving (returns a Promise)
        wire(sheet) }              // optional, attach listeners; sheet = { apply, close, fill }
 */
-import { $, html } from '../core/dom.js';
+import { $, html, openLayer, closeLayer } from '../core/dom.js';
 
 const SECTIONS = [
   ['location', 'Location'],
@@ -50,8 +50,8 @@ function buildForm() {
 }
 
 function fill() { parts.forEach((p) => { if (p.fill) p.fill(ctx.cfg, ctx); }); }
-function open() { fill(); $('sheet').hidden = false; $('s-close').focus(); }
-function close() { $('sheet').hidden = true; }
+function open() { fill(); openLayer($('sheet')); $('s-close').focus(); }
+function close() { closeLayer($('sheet')); }
 
 /* Read every field into a draft, run async commits, then apply (and by default save) it. */
 function apply(opts) {

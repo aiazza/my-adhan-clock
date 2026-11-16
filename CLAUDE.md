@@ -8,26 +8,43 @@ It replaces a commercial azan frame. Two goals drive every decision:
 
 ## Current state
 
-`azan-clock.html` is a working single-file prototype. It is the reference for behavior and look.
-Do not treat its structure as the target; it needs to be split up (see Roadmap, step 1).
+Roadmap steps 1 and 2 are done. The app is `index.html` plus ES modules (layout below and in
+`README.md`). The original single-file prototype is kept in `reference/azan-clock.html` for
+comparison; `tests/browser/compare-with-prototype.cjs` diffs the two.
 
-What the prototype does today:
+What it does today:
 
-- Computes prayer times on the device with adhan-js 4.4.6 (loaded from jsDelivr), with a small
-  built-in solar calculation as fallback when the library has not loaded.
+- Computes prayer times on the device with adhan-js 4.4.6 (vendored in `vendor/`), with a small
+  built-in solar calculation as fallback if that file fails to load.
 - Shows a large clock, Gregorian and Hijri dates (Hijri day rolls over at Maghrib), a countdown to
   the next prayer, then a countdown to iqamah once the adhan has been called.
 - Shows six columns (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha) with adhan and iqamah times, and a
   midnight-to-midnight day bar with a marker for now.
 - Plays the adhan at each prayer time. Source order: a recording chosen in settings (stored in
-  IndexedDB), then `adhan.mp3` / `adhan-fajr.mp3` next to the page, then a synthesized chime.
+  IndexedDB), then `assets/audio/adhan.mp3` / `adhan-fajr.mp3`, then a synthesized chime.
 - Sky gradient behind the clock follows the real sun for the configured location.
 - Settings panel (gear icon), saved in localStorage: location, method, Asr school, per-prayer
   sound / iqamah / minute adjustment, Jumu'ah time, Hijri adjustment, 12/24h, night dimming.
 - Optional masjid feed: a Mawaqit mosque ID or a JSON feed URL. The masjid's iqamah times (and
   optionally adhan times) override the manual ones. Falls back to manual values on failure.
-- Kiosk details: small pixel shift each minute against burn-in, night dimming between Isha and
-  Fajr, wake lock, hidden cursor when idle.
+- Kiosk details: small pixel shift each minute against burn-in, night dimming from an hour after
+  Isha to half an hour before Fajr, wake lock, hidden cursor when idle.
+- Works offline after the first visit (`sw.js`, network first for this site, so a git push shows
+  up on the next page load).
+
+### How the code is organized
+
+- `js/main.js` boots everything and documents the feature interface and `ctx`. Features are
+  plain objects: `{ id, defaults, mount(ctx), start(ctx), onDayChange(now), onTick(now),
+  onMinute(now), settings }`. `js/features/index.js` lists the enabled ones in mount order.
+- `ctx`: `cfg`, `config` (store), `bus`, `slot(name)`, `provide/use` for services, `refresh()`.
+  Services: `times` (prayer-times.js: `today`, `tomorrow`, `iqamah`, `name`, `current`),
+  `feed` (masjid-feed.js), `adhan` (adhan-audio.js: `fire`, `hide`, `unlock`).
+- Each feature builds its own markup into a named slot of `index.html` and contributes its own
+  settings fields; the format is documented at the top of `js/features/settings.js`.
+- `js/core/time.js` ticks once per second on the second boundary.
+- Overlays open and close with `openLayer` / `closeLayer` from `js/core/dom.js`.
+- Config is still stored under `azan-clock-config-v1` in the same shape as the prototype.
 
 Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x shadow).
 
@@ -43,7 +60,9 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 
 ## Roadmap, in order
 
-1. **Restructure into modules.** Suggested shape:
+1. **Restructure into modules.** Done. The shape below was the suggestion; the actual layout is
+   in `README.md` (adds `countdown.js`, `dates.js`, `day-bar.js`, `prayer-panel.js`,
+   `pattern.js`, `burn-in.js`, `kiosk.js`; `hijri.js` became `dates.js`).
 
    ```
    index.html
@@ -63,7 +82,10 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
    and `ctx` gives it the config store, the event bus and named layout slots. Adding a feature
    should mean adding one file and one line in `js/features/index.js`.
 
-2. **Animation pass** (see Performance rules).
+2. **Animation pass** (see Performance rules). Done: no backdrop-filter, highlight and adhan
+   glow animate opacity / transform only, day-bar marker moves by transform, status line
+   rewrites only the number, overlays fade (sheet slides), reduced motion respected. Still to
+   do: check smoothness on the real tablet.
 3. **Cycling backgrounds.** Rotate through high resolution Islamic artwork and photography behind
    the clock, crossfading. Keep the sky gradient as one of the modes.
 4. **Quran and audio.** Quran player, adhkar, dua after the adhan.
@@ -100,8 +122,20 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 - **Background images must be licensed for this use**: the owner's own, public domain, or CC0.
   Record the source and license of each image in `assets/backgrounds/README.md`.
 - Time zone comes from the device. Prayer timestamps are absolute, so DST is handled.
+- **Updates need a page load.** The page never reloads itself (a reload could re-lock audio on a
+  kiosk without autoplay). Use Fully Kiosk's scheduled reload, or add a safe reload later.
+- **Bundled mp3 files are not cached offline** (media uses range requests; the worker skips
+  them). Recordings chosen in settings live in IndexedDB and do work offline.
+- **Fallback calculation** lacks adhan-js's +1 minute Dhuhr adjustment, so its Dhuhr can be up
+  to 2 minutes early. It only runs if `vendor/adhan.umd.min.js` fails to load.
+- Google Fonts are still loaded from Google (cached by the worker). Vendoring them into `assets/`
+  would remove the first-visit dependency.
 
 ## Tests to keep
+
+`npm test` runs `tests/prayer-times.test.mjs` (table below, Hanafi, Hijri, iqamah rules).
+`node tests/browser/behavior.cjs` runs 29 browser checks with a fake clock (needs Playwright and
+`python3 -m http.server 8080`).
 
 ISNA, standard Asr. Computed times should match within one minute:
 
@@ -113,7 +147,7 @@ ISNA, standard Asr. Computed times should match within one minute:
 
 Hanafi Asr for the Queens row is 5:31. 16 November 2026 is 6 Jumada II 1448 before Maghrib.
 
-## First task for a new session
+## Next session
 
-Read `azan-clock.html`, then do roadmap step 1 without changing behavior or appearance. Verify
-by running the tests and loading the page, then move on to the animation pass.
+Steps 1 and 2 are done. Before step 3, check the clock on the real tablet (smoothness, autoplay,
+a real adhan recording). Then cycling backgrounds as a new feature file with two stacked layers.

@@ -1,8 +1,15 @@
-.sheet { position: fixed; inset: 0; background: rgba(4, 6, 18, .6); display: flex; justify-content: flex-end; }
+/* Settings sheet: the backdrop fades and the panel slides in from the right. */
+.sheet {
+  position: fixed; inset: 0; background: rgba(4, 6, 18, .6); display: flex; justify-content: flex-end;
+  opacity: 0; transition: opacity var(--t-overlay) ease;
+}
+.sheet.open { opacity: 1; }
 .sheet form {
   width: min(520px, 100%); height: 100%; overflow-y: auto; background: #0e1230; border-left: 1px solid var(--line);
   padding: 24px clamp(16px, 4vw, 30px) 28px; display: grid; gap: 22px; align-content: start; font-weight: 400;
+  transform: translateX(40px); transition: transform var(--t-overlay) var(--ease-out);
 }
+.sheet.open form { transform: none; }
 .sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; margin: 0; }
 .sheet h3 { font-size: .74rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; font-weight: 500; }
 .sheet .head { display: flex; justify-content: space-between; align-items: center; }
@@ -29,4 +36,8 @@
 
 @media (max-width: 420px) {
   .sheet .grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .sheet form { transition: none; }
+  .sheet form { transform: none; }
 }

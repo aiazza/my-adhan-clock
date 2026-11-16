@@ -8,6 +8,12 @@
   --gold: #ecc67e;
   --panel: rgba(8, 11, 32, .42);
   --line: rgba(247, 242, 231, .16);
+  /* Flat fills that replace the prototype's backdrop blur (too costly on the target tablet). */
+  --panel-fill: rgba(8, 11, 32, .5);
+  --overlay-wash: rgba(5, 8, 24, .86);
+  /* Motion. --t-overlay must match LAYER_MS in js/core/dom.js. */
+  --t-overlay: .45s;
+  --ease-out: cubic-bezier(.2, .7, .2, 1);
   --font-display: 'Marcellus', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
   --font-body: 'Outfit', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-arabic: 'Reem Kufi', 'Noto Kufi Arabic', 'Noto Naskh Arabic', 'Geeza Pro', 'Segoe UI', serif;

@@ -23,6 +23,7 @@ body.idle { cursor: none; }
   padding: clamp(16px, 3.4vmin, 44px);
   user-select: none; -webkit-user-select: none;
   transition: transform 1.2s ease;
+  will-change: transform;   /* burn-in shift moves on the compositor */
 }
 
 /* top strip */

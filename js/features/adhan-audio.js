@@ -4,7 +4,7 @@
    Browsers block sound until a user gesture; while blocked, a "Tap to enable" pill is shown.
    Provides the 'adhan' service: { fire(k, withSound), hide(), unlock() }. */
 import { dayKey, formatTime } from '../core/format.js';
-import { $, html, readNumber } from '../core/dom.js';
+import { $, html, readNumber, openLayer, closeLayer, isOpen } from '../core/dom.js';
 import { FIVE } from './prayer-times.js';
 
 const ADHAN_URL = 'assets/audio/adhan.mp3';
@@ -45,13 +45,22 @@ function showSoundState() {
   ctx.slot('controls').classList.toggle('alert', !unlocked);
 }
 
+/* Called from user gestures. Sound counts as enabled only once the silent clip really plays:
+   on a touch screen Chrome accepts the gesture on pointerup, not pointerdown, and a refused
+   play() must leave the "Tap to enable" pill showing. */
+let silent = null;
 function unlock() {
   if (unlocked) return;
   const c = getCtx();
-  if (c && c.state !== 'running') { try { c.resume(); } catch (e) {} }
-  try { player.src = silentUrl(); const p = player.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
-  unlocked = true;
-  showSoundState();
+  if (c && c.state !== 'running') { try { const r = c.resume(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+  const done = () => { if (!unlocked) { unlocked = true; showSoundState(); } };
+  try {
+    if (!silent) silent = silentUrl();
+    player.src = silent;
+    const p = player.play();
+    if (p && p.then) p.then(done, () => { if (c && c.state === 'running') done(); });
+    else done();
+  } catch (e) {}
 }
 
 function chime() {
@@ -85,7 +94,7 @@ function fire(k, withSound) {
   $('adhanAr').textContent = name[1];
   $('adhanEn').textContent = 'Time for ' + name[0];
   $('adhanAt').textContent = at.t + ' ' + at.ap;
-  $('adhan').hidden = false;
+  openLayer($('adhan'));
   clearTimeout(hideTimer); clearTimeout(chimeTimer);
   hideTimer = setTimeout(hide, OVERLAY_MS);
   if (!withSound) { chimeTimer = setTimeout(hide, SILENT_MS); return; }
@@ -98,7 +107,7 @@ function fire(k, withSound) {
 function hide() {
   clearTimeout(hideTimer); clearTimeout(chimeTimer);
   try { player.pause(); } catch (e) {}
-  $('adhan').hidden = true;
+  closeLayer($('adhan'));
 }
 
 /* Recordings chosen in settings are kept in IndexedDB on this device. */
@@ -150,8 +159,9 @@ export default {
       '</div>'));
     $('silenceBtn').addEventListener('click', hide);
     $('soundPill').addEventListener('click', unlock);
-    player.addEventListener('ended', () => { if (!$('adhan').hidden) hide(); });
+    player.addEventListener('ended', () => { if (isOpen($('adhan'))) hide(); });
     document.addEventListener('pointerdown', unlock);
+    document.addEventListener('pointerup', unlock);
     document.addEventListener('keydown', (e) => {
       unlock();
       if (e.key === 'Escape') hide();

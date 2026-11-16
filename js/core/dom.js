@@ -23,3 +23,28 @@ export function readNumber(id, fallback) {
   const v = parseFloat($(id).value);
   return isNaN(v) ? fallback : v;
 }
+
+/* Overlays (adhan screen, settings sheet) fade in and out instead of popping.
+   The element keeps the `hidden` attribute while closed, so it costs nothing then; the CSS
+   animates the `.open` class (opacity / transform only). LAYER_MS matches --t-overlay. */
+export const LAYER_MS = 450;
+const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+export function isOpen(el) { return !el.hidden && el.classList.contains('open'); }
+
+export function openLayer(el) {
+  clearTimeout(el._layerTimer);
+  if (el.hidden) {
+    el.hidden = false;
+    el.getBoundingClientRect();   // commit the closed state so the transition runs
+  }
+  el.classList.add('open');
+}
+
+export function closeLayer(el) {
+  if (el.hidden) return;
+  el.classList.remove('open');
+  clearTimeout(el._layerTimer);
+  if (reducedMotion()) { el.hidden = true; return; }
+  el._layerTimer = setTimeout(() => { el.hidden = true; }, LAYER_MS);
+}
