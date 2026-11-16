@@ -1,0 +1,13 @@
+.adhan {
+  position: fixed; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px;
+  background: rgba(5, 8, 24, .86); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.adhan .ring { width: min(58vmin, 420px); aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; align-content: center; gap: .5rem; animation: breathe 4s ease-in-out infinite; }
+.adhan .ar { font-family: var(--font-arabic); font-size: clamp(2.4rem, 11vmin, 5.4rem); color: var(--gold); line-height: 1.2; }
+.adhan .en { font-family: var(--font-display); font-size: clamp(1rem, 3.4vmin, 1.7rem); letter-spacing: .08em; }
+.adhan .at { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.adhan .pill { margin-top: .8rem; font-size: 1rem; }
+@keyframes breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(236, 198, 126, .0), 0 0 60px rgba(236, 198, 126, .12) inset; } 50% { box-shadow: 0 0 0 22px rgba(236, 198, 126, .08), 0 0 90px rgba(236, 198, 126, .22) inset; } }
+@media (prefers-reduced-motion: reduce) {
+  .adhan .ring { animation: none; }
+}

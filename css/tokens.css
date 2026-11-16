@@ -1,0 +1,15 @@
+/* Design tokens. --sky-top / --sky-bottom are repainted each minute by js/features/sky.js. */
+:root {
+  --sky-top: #090d24;
+  --sky-bottom: #181c4a;
+  --ink: #f7f2e7;
+  --ink-soft: rgba(247, 242, 231, .74);
+  --ink-faint: rgba(247, 242, 231, .46);
+  --gold: #ecc67e;
+  --panel: rgba(8, 11, 32, .42);
+  --line: rgba(247, 242, 231, .16);
+  --font-display: 'Marcellus', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --font-body: 'Outfit', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-arabic: 'Reem Kufi', 'Noto Kufi Arabic', 'Noto Naskh Arabic', 'Geeza Pro', 'Segoe UI', serif;
+  color-scheme: dark;
+}

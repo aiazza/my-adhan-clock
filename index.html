@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Azan Clock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Outfit:wght@200;300;400;500&family=Reem+Kufi:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/pattern.css">
+<link rel="stylesheet" href="css/clock.css">
+<link rel="stylesheet" href="css/day-bar.css">
+<link rel="stylesheet" href="css/prayers.css">
+<link rel="stylesheet" href="css/night-dim.css">
+<link rel="stylesheet" href="css/adhan.css">
+<link rel="stylesheet" href="css/settings.css">
+<script src="vendor/adhan.umd.min.js" defer></script>
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<!-- Layout slots. Features fill them (see js/main.js); the markup itself lives in the features. -->
+<div data-slot="backdrop"></div>
+
+<main class="stage" id="stage" data-slot="stage">
+  <header class="top">
+    <div data-slot="top-start"></div>
+    <div class="controls" id="controls" data-slot="controls"></div>
+    <div class="hijri" data-slot="top-end"></div>
+  </header>
+  <section class="center" data-slot="center"></section>
+  <section class="daybar" id="daybar" aria-hidden="true" data-slot="daybar"></section>
+  <section class="prayers" id="prayers" aria-label="Prayer times today" data-slot="prayers"></section>
+</main>
+
+<div data-slot="overlays"></div>
+</body>
+</html>

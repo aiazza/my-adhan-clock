@@ -1,0 +1,16 @@
+/* clock */
+.center { display: grid; align-content: center; justify-items: center; gap: clamp(4px, 1.6vmin, 18px); min-height: 0; }
+.clock { display: flex; align-items: flex-start; line-height: .86; font-weight: 200; }
+.hm { font-size: min(25vw, 38vh); letter-spacing: -.02em; display: flex; }
+.hm .d { display: inline-block; width: .6em; text-align: center; }
+.hm .c { display: inline-block; width: .26em; text-align: center; position: relative; top: -.06em; color: var(--gold); }
+.side { display: grid; gap: .5em; margin: min(3vw, 4.6vh) 0 0 min(1.4vw, 2vh); font-size: min(3.6vw, 5.4vh); font-weight: 300; }
+.side .ampm { letter-spacing: .12em; color: var(--gold); }
+.side .sec { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.status { margin: 0; text-align: center; font-size: clamp(1.05rem, 3.6vmin, 2.3rem); color: var(--ink-soft); }
+.status b { font-family: var(--font-display); font-weight: 400; color: var(--ink); letter-spacing: .03em; }
+.status .count { color: var(--gold); font-variant-numeric: tabular-nums; font-weight: 400; }
+
+@media (max-width: 760px) {
+  .hm { font-size: min(27vw, 30vh); }
+}
