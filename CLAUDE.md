@@ -1,0 +1,119 @@
+# Azan Clock
+
+A home prayer clock that runs as a web page on a wall or countertop tablet in kiosk mode.
+It replaces a commercial azan frame. Two goals drive every decision:
+
+1. It must feel very smooth and fluid on cheap hardware.
+2. It must be easy to add features to over time.
+
+## Current state
+
+`azan-clock.html` is a working single-file prototype. It is the reference for behavior and look.
+Do not treat its structure as the target; it needs to be split up (see Roadmap, step 1).
+
+What the prototype does today:
+
+- Computes prayer times on the device with adhan-js 4.4.6 (loaded from jsDelivr), with a small
+  built-in solar calculation as fallback when the library has not loaded.
+- Shows a large clock, Gregorian and Hijri dates (Hijri day rolls over at Maghrib), a countdown to
+  the next prayer, then a countdown to iqamah once the adhan has been called.
+- Shows six columns (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha) with adhan and iqamah times, and a
+  midnight-to-midnight day bar with a marker for now.
+- Plays the adhan at each prayer time. Source order: a recording chosen in settings (stored in
+  IndexedDB), then `adhan.mp3` / `adhan-fajr.mp3` next to the page, then a synthesized chime.
+- Sky gradient behind the clock follows the real sun for the configured location.
+- Settings panel (gear icon), saved in localStorage: location, method, Asr school, per-prayer
+  sound / iqamah / minute adjustment, Jumu'ah time, Hijri adjustment, 12/24h, night dimming.
+- Optional masjid feed: a Mawaqit mosque ID or a JSON feed URL. The masjid's iqamah times (and
+  optionally adhan times) override the manual ones. Falls back to manual values on failure.
+- Kiosk details: small pixel shift each minute against burn-in, night dimming between Isha and
+  Fajr, wake lock, hidden cursor when idle.
+
+Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x shadow).
+
+## Decisions already made
+
+- Plain JavaScript ES modules. No build step, no framework, no TypeScript. One file per feature.
+- Hosted from a Git repo (GitHub Pages or Cloudflare Pages). The tablet loads the URL, a git push
+  updates it, and a service worker keeps it working offline after the first load.
+- Target device is a low-end Android tablet (Fire HD 8 class) running Fully Kiosk Browser, so the
+  performance budget is tight.
+- Use maintained open source for the parts that benefit from it: adhan-js for calculation.
+  Vendor it into the repo rather than relying on the CDN once the project is hosted.
+
+## Roadmap, in order
+
+1. **Restructure into modules.** Suggested shape:
+
+   ```
+   index.html
+   css/           tokens.css, layout.css, one file per feature where needed
+   js/core/       config.js (store + defaults), time.js (tick, day change, events), bus.js
+   js/features/   prayer-times.js, clock.js, sky.js, hijri.js, adhan-audio.js,
+                  masjid-feed.js, night-dim.js, settings.js
+   js/features/index.js   the list of enabled features
+   vendor/        adhan.umd.min.js
+   assets/        audio/, backgrounds/
+   sw.js          offline cache
+   tests/         prayer-times.test.mjs (node --test)
+   ```
+
+   Each feature exports the same small interface, for example
+   `{ id, defaults, mount(ctx), onTick(now), onMinute(now), onDayChange(now), settings }`,
+   and `ctx` gives it the config store, the event bus and named layout slots. Adding a feature
+   should mean adding one file and one line in `js/features/index.js`.
+
+2. **Animation pass** (see Performance rules).
+3. **Cycling backgrounds.** Rotate through high resolution Islamic artwork and photography behind
+   the clock, crossfading. Keep the sky gradient as one of the modes.
+4. **Quran and audio.** Quran player, adhkar, dua after the adhan.
+5. **Masjid content.** Reliable iqamah sync, announcements, Jumu'ah, Ramadan timetable.
+
+## Performance rules
+
+- Animate only `transform` and `opacity`. Never animate layout properties or gradients.
+- No `backdrop-filter` or large blurs. The prototype uses blur on the prayer panel and the adhan
+  overlay; replace it with flat translucent fills.
+- Move the day-bar marker with `transform`, not `left`.
+- Update text only when its value changes. The prototype rewrites the status line four times a
+  second; tick once per second, aligned to the second boundary.
+- Crossfade backgrounds with two stacked layers and opacity. Decode the next image before fading
+  (`img.decode()`), and ship images sized to the panel (about 1920 px wide, WebP or AVIF), not
+  originals.
+- Give overlays (adhan screen, settings sheet) enter and exit transitions; today they pop.
+- Respect `prefers-reduced-motion`.
+- Check smoothness on the real tablet, not on a laptop.
+
+## Constraints and known gaps
+
+- **Autoplay.** Browsers block sound until a user gesture. The kiosk must enable audio autoplay
+  (a Fully Kiosk setting, or Chromium's `--autoplay-policy=no-user-gesture-required`). The page
+  shows a "Tap to enable adhan sound" button when sound is locked.
+- **Adhan playback with a real recording has not been tested** on the target hardware.
+- **Mawaqit sync is untested against the live site.** It was only tested against a simulated
+  mosque page. A browser will refuse to load mawaqit.net cross-origin unless the kiosk permits
+  it. Once hosted on Cloudflare Pages, a small Pages Function can fetch the feed server-side.
+  Do not build anything that impersonates a browser or works around Mawaqit's protections;
+  prefer their official API with the owner's own access token.
+- **Which platform the owner's masjid uses (Masjidal, Mawaqit, neither) is still unknown.** Ask
+  before investing in sync.
+- **Background images must be licensed for this use**: the owner's own, public domain, or CC0.
+  Record the source and license of each image in `assets/backgrounds/README.md`.
+- Time zone comes from the device. Prayer timestamps are absolute, so DST is handled.
+
+## Tests to keep
+
+ISNA, standard Asr. Computed times should match within one minute:
+
+| Place and date | Fajr | Sunrise | Dhuhr | Asr | Maghrib | Isha |
+|---|---|---|---|---|---|---|
+| Bronx (40.8448, -73.8648), 2026-11-05 | 5:13 | 6:31 | 11:40 | 2:24 | 4:46 | 6:04 |
+| New York (40.7128, -74.006), 2026-07-01 | 3:50 | 5:29 | 1:01 | 5:00 | 8:31 | 10:10 |
+| Queens (40.7282, -73.7949), 2026-04-04 | 5:16 | 6:33 | 12:59 | 4:35 | 7:23 | 8:41 |
+
+Hanafi Asr for the Queens row is 5:31. 16 November 2026 is 6 Jumada II 1448 before Maghrib.
+
+## First task for a new session
+
+Read `azan-clock.html`, then do roadmap step 1 without changing behavior or appearance. Verify
+by running the tests and loading the page, then move on to the animation pass.
