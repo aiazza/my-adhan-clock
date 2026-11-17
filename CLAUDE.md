@@ -151,7 +151,7 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
   would lock sound again; then Fully Kiosk's scheduled reload or Remote Admin does it.
 - **Hardware chosen (Nov 2026):** a Samsung Galaxy Tab A11 (8.7", SM-X133, international) on a
   desk stand, with Fully Kiosk Browser (PLUS for Remote Admin). Check the layout on it. Turn on
-  Protect battery. The repository is not on GitHub yet; the owner is creating one.
+  Protect battery. Repository: github.com/aiazza/my-adhan-clock; site: https://aiazza.github.io/my-adhan-clock/
 - **Bundled mp3 files are not cached offline** (media uses range requests; the worker skips
   them). Recordings chosen in settings live in IndexedDB and do work offline.
 - **Fallback calculation** lacks adhan-js's +1 minute Dhuhr adjustment, so its Dhuhr can be up
