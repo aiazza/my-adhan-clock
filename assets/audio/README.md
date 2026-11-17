@@ -8,3 +8,8 @@ Only add recordings you have the right to redistribute, and note the reciter and
 
 | File | Reciter | Source | License |
 |---|---|---|---|
+| `adhan.mp3` | Ahmed Al-Haddad | Supplied by the owner; the file's tags name assabile.com and islamweb.net | Not stated; check before sharing widely |
+
+`adhan.mp3` also plays for Fajr until an `adhan-fajr.mp3` is added (this recording has no
+"as-salatu khayrun min an-nawm"). Tags and cover art were stripped; the audio is unchanged
+(128 kb/s, 2 min 35 s).
