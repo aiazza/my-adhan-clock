@@ -87,11 +87,11 @@ test('daily order is a shuffle, stable within a day, different across days', () 
   assert.notDeepEqual(a, c);
 });
 
-test('slides stay up longer for longer texts, within 18-50 seconds', () => {
+test('every slide stays 30 seconds', () => {
   const kursi = content.quran.find((q) => q.ref.includes('2:255'));
-  assert.equal(durationFor('quran', kursi), 50);
-  assert.equal(durationFor('hadith', { en: 'Purity is half of faith.' }), 18);
-  assert.equal(durationFor('names', {}), 15);
+  assert.equal(durationFor('quran', kursi), 30);
+  assert.equal(durationFor('hadith', { en: 'Purity is half of faith.' }), 30);
+  assert.equal(durationFor('names', {}), 30);
 });
 
 import { dueReminder } from '../js/features/pre-prayer.js';

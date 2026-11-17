@@ -24,7 +24,7 @@ What it does today:
   IndexedDB), then `assets/audio/adhan.mp3` / `adhan-fajr.mp3`, then a synthesized chime.
 - Background: Islamic art from The Met (12 CC0 works in `assets/backgrounds/`), crossfading
   every 10 minutes under a dark scrim; or the sky gradient that follows the real sun.
-- Reminder slides (full screen, small clock and countdown in the corner) every 10 minutes:
+- Reminder slides (full screen, small clock and countdown in the corner) every 10 minutes, 30 s each:
   hadith, Quran verses (Pickthall translation), Names of Allah, and morning / evening adhkar in
   their time. The dua after the adhan shows when the adhan screen closes; an after-prayer dhikr
   when the prayer is over. Quiet from a minute before each adhan until 15 minutes after iqamah,
@@ -155,7 +155,7 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 
 `npm test` runs `tests/prayer-times.test.mjs` (table below, Hanafi, Hijri, iqamah rules) and
 `tests/slides.test.mjs` (content files complete, quiet times, adhkar windows, rotation,
-reminders before prayers). `node tests/browser/behavior.cjs` runs 58 browser checks with a fake clock (needs Playwright and
+reminders before prayers). `node tests/browser/behavior.cjs` runs 60 browser checks with a fake clock (needs Playwright and
 `python3 -m http.server 8080`).
 
 ISNA, standard Asr. Computed times should match within one minute:

@@ -10,7 +10,7 @@
      praying), nor while the screen is dimmed at night or settings are open
    - the dua after the adhan as soon as the adhan screen closes
    - an after-prayer dhikr when that quiet time ends
-   A tap or Escape closes a slide early. */
+   Each slide stays 30 seconds; a tap or Escape closes it early. */
 import { countdown, formatTime } from '../core/format.js';
 import { $, html, setText, openLayer, closeLayer, isOpen } from '../core/dom.js';
 import { FIVE } from './prayer-times.js';
@@ -75,12 +75,9 @@ export function dayOrder(length, now) {
   return order;
 }
 
-/* Seconds a slide stays up, longer for longer texts. */
-export function durationFor(kind, item) {
-  if (kind === 'names') return 15;
-  const en = Array.isArray(item.en) ? item.en.join(' ') : String(item.en || '');
-  return Math.round(Math.min(50, Math.max(18, 14 + en.length * 0.075)));
-}
+/* Seconds a slide stays up before it goes away by itself (a tap closes it sooner). */
+export const SLIDE_SECONDS = 30;
+export function durationFor() { return SLIDE_SECONDS; }
 
 const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const arabicNumber = (n) => String(n).replace(/\d/g, (d) => AR_DIGITS[d]);
@@ -156,7 +153,7 @@ function open(kind, item, label, now) {
   renderCorner(now);
   document.body.classList.add('slide-on');
   openLayer(el.root);
-  closeAt = now.getTime() + (label === LABEL['after-adhan'] ? 40 : durationFor(kind, item)) * 1000;
+  closeAt = now.getTime() + durationFor(kind, item) * 1000;
   return true;
 }
 
@@ -165,6 +162,7 @@ function close() {
   document.body.classList.remove('slide-on');
   closeLayer(el.root);
   closeAt = 0;
+  nextAt = Date.now() + everyMs();   // however it closed (timer, tap, banner, adhan), wait a full interval
 }
 
 function renderCorner(now) {
@@ -242,7 +240,7 @@ export default {
     const ms = now.getTime();
     if (!el.root.hidden) {
       if (isOpen(el.root)) renderCorner(now);
-      if (closeAt && ms >= closeAt) { close(); nextAt = ms + everyMs(); }
+      if (closeAt && ms >= closeAt) close();
       return;
     }
     if (!everyMs() || !content) return;
@@ -273,7 +271,7 @@ export default {
       after: '<div class="actions" style="margin-top:10px"><button class="btn" type="button" id="s-slide-test">Show a reminder now</button></div>' +
         '<p class="hint">Reminders pause from a minute before each adhan until 15 minutes after its iqamah, ' +
         'and at night while the screen is dimmed. The dua after the adhan shows when the adhan ends; ' +
-        'morning and evening adhkar show from Fajr to Dhuhr and from Asr to Isha. Tap a reminder to close it.</p>',
+        'morning and evening adhkar show from Fajr to Dhuhr and from Asr to Isha. Each reminder stays 30 seconds; tap it to close it sooner.</p>',
       fill(cfg) {
         $('s-slideevery').value = String(cfg.slideEvery);
         KINDS.forEach((k) => { $('s-kind-' + k).checked = !!cfg.slideKinds[k]; });

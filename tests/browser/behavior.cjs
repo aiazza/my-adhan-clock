@@ -174,9 +174,17 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     ok('corner clock on the slide', /^9:01 AM$/.test(await page.$eval('#slideTime', (e) => e.textContent)), await page.$eval('#slideTime', (e) => e.textContent));
     await page.clock.runFor(52000);
     await page.waitForTimeout(1000);
-    ok('slide closes by itself within 50 s', await page.$eval('#slide', (e) => e.hidden) && await page.$eval('#stage', (e) => getComputedStyle(e).opacity === '1'));
+    ok('slide closes by itself after 30 s', await page.$eval('#slide', (e) => e.hidden) && await page.$eval('#stage', (e) => getComputedStyle(e).opacity === '1'));
+    // a slide closed by a tap must not be followed by another one right away
+    await page.clock.runFor(10 * 60000);
+    ok('second slide 10 minutes later', !(await page.$eval('#slide', (e) => e.hidden)));
+    await page.mouse.click(640, 400);
+    await page.waitForTimeout(800);
+    let early = false;
+    for (let i = 0; i < 9 * 12; i++) { await page.clock.runFor(5000); if (!(await page.$eval('#slide', (e) => e.hidden))) { early = true; break; } }
+    ok('after tapping a slide closed, none for the next 9 minutes', !early);
     // jump to just before Dhuhr (11:41): nothing may show until 15 min after iqamah (11:56)
-    await page.clock.fastForward('02:38:00');
+    await page.clock.fastForward('02:19:00');
     let during = false, duaAt = '';
     for (let i = 0; i < 40 * 12; i++) {
       await page.clock.runFor(5000);
