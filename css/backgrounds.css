@@ -1,0 +1,22 @@
+/* Art backgrounds: two stacked image layers crossfading with opacity, under a fixed scrim
+   that keeps the clock readable. Shown only in art mode (body.bg-art). */
+.bg { position: fixed; inset: 0; pointer-events: none; display: none; }
+body.bg-art .bg { display: block; }
+body.bg-art #pattern { display: none; }
+.bg-layer {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity 2.4s ease-in-out; will-change: opacity;
+}
+.bg-layer.show { opacity: 1; }
+/* Extra shade while a reminder slide is up, so long Arabic text stays easy to read. */
+.bg::after { content: ""; position: absolute; inset: 0; background: rgba(6, 9, 26, .38); opacity: 0; transition: opacity .9s ease; }
+body.slide-on .bg::after { opacity: 1; }
+.bg-scrim {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 42%, var(--scrim-core), transparent 100%),
+    linear-gradient(180deg, var(--scrim-edge), var(--scrim-mid) 45%, var(--scrim-edge));
+}
+@media (prefers-reduced-motion: reduce) {
+  .bg-layer, .bg::after { transition: none; }
+}

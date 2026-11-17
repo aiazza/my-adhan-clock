@@ -1,0 +1,43 @@
+/* Settings sheet: the backdrop fades and the panel slides in from the right. */
+.sheet {
+  position: fixed; inset: 0; background: rgba(4, 6, 18, .6); display: flex; justify-content: flex-end;
+  opacity: 0; transition: opacity var(--t-overlay) ease;
+}
+.sheet.open { opacity: 1; }
+.sheet form {
+  width: min(520px, 100%); height: 100%; overflow-y: auto; background: #0e1230; border-left: 1px solid var(--line);
+  padding: 24px clamp(16px, 4vw, 30px) 28px; display: grid; gap: 22px; align-content: start; font-weight: 400;
+  transform: translateX(40px); transition: transform var(--t-overlay) var(--ease-out);
+}
+.sheet.open form { transform: none; }
+.sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; margin: 0; }
+.sheet h3 { font-size: .74rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; font-weight: 500; }
+.sheet .head { display: flex; justify-content: space-between; align-items: center; }
+.sheet .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sheet label { display: grid; gap: 5px; font-size: .82rem; color: var(--ink-soft); }
+.sheet label.wide { grid-column: 1 / -1; }
+.sheet label.check { display: flex; align-items: center; gap: 9px; font-size: .92rem; color: var(--ink); }
+.sheet input[type=text], .sheet input[type=number], .sheet select {
+  font: inherit; font-size: .98rem; color: var(--ink); background: #171c44; border: 1px solid var(--line);
+  border-radius: 8px; padding: .55em .7em; width: 100%; min-width: 0;
+}
+.sheet input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--gold); }
+.sheet input[type=range] { width: 100%; accent-color: var(--gold); }
+.sheet input[type=file] { font: inherit; font-size: .82rem; color: var(--ink-soft); max-width: 100%; }
+.sheet table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.sheet th { text-align: left; font-weight: 400; font-size: .74rem; color: var(--ink-faint); padding: 0 6px 6px 0; }
+.sheet td { padding: 4px 6px 4px 0; }
+.sheet td:first-child { font-family: var(--font-display); }
+.sheet .hint { font-size: .8rem; color: var(--ink-faint); line-height: 1.5; margin: 8px 0 0; }
+.sheet .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { appearance: none; font: inherit; font-size: .92rem; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: .55em 1.1em; cursor: pointer; }
+.btn:hover { background: #171c44; }
+.btn.primary { background: var(--gold); color: #1a1408; border-color: var(--gold); font-weight: 500; }
+
+@media (max-width: 420px) {
+  .sheet .grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .sheet form { transition: none; }
+  .sheet form { transform: none; }
+}

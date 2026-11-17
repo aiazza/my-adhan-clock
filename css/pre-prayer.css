@@ -1,0 +1,20 @@
+/* Banner before a prayer: drops in at the top centre (transform and opacity only). */
+.pre {
+  position: fixed; top: clamp(10px, 2.4vmin, 30px); left: 50%;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; column-gap: .8em; row-gap: .1em;
+  max-width: calc(100% - 32px); padding: .55em 1.4em;
+  background: #0b0f2a; border: 1px solid var(--gold); border-radius: 999px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .35);
+  font-size: clamp(1rem, 3vmin, 1.8rem); white-space: nowrap; pointer-events: none;
+  opacity: 0; transform: translate(-50%, -120%);
+  transition: opacity .5s ease, transform .6s var(--ease-out);
+}
+.pre.open { opacity: 1; transform: translate(-50%, 0); }
+.pre-ar { font-family: var(--font-arabic); color: var(--gold); font-size: 1.15em; line-height: 1.2; }
+.pre-text b { font-family: var(--font-display); font-weight: 400; letter-spacing: .03em; }
+.pre-count { color: var(--gold); font-variant-numeric: tabular-nums; }
+.pre-iq { color: var(--ink-soft); font-size: .7em; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+.pre-iq:empty { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .pre { transition: none; }
+}

@@ -1,0 +1,45 @@
+# Publishes the clock to GitHub Pages on every push to the main branch, after the unit tests
+# pass. It also writes version.json (the commit id), which the clock checks to update itself
+# (js/features/updates.js). One-time setup: Settings > Pages > Source: "GitHub Actions".
+name: Publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: npm test
+      - name: Build the site folder
+        run: |
+          mkdir _site
+          cp -r index.html sw.js js css assets vendor _site/
+          if [ -f settings.json ]; then cp settings.json _site/; fi
+          printf '{"version":"%s","published":"%s"}\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > _site/version.json
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
