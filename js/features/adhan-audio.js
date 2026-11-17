@@ -2,7 +2,8 @@
    Sound source order: a recording chosen in settings (kept in IndexedDB on this device), then
    assets/audio/adhan.mp3 (adhan-fajr.mp3 for Fajr), then a synthesized chime.
    Browsers block sound until a user gesture; while blocked, a "Tap to enable" pill is shown.
-   Provides the 'adhan' service: { fire(k, withSound), hide(), unlock() }.
+   Provides the 'adhan' service: { fire(k, withSound), hide(), unlock(), remind() }.
+   remind() plays a short soft chime (used before prayers); it is skipped while an adhan plays.
    Bus events: 'adhan:start' { k } when the screen opens, 'adhan:end' { k } when it closes. */
 import { dayKey, formatTime } from '../core/format.js';
 import { $, html, readNumber, openLayer, closeLayer, isOpen } from '../core/dom.js';
@@ -77,6 +78,23 @@ function chime() {
     o.connect(g); g.connect(c.destination); o.start(at); o.stop(at + 2.5);
   });
   chimeTimer = setTimeout(hide, CHIME_MS);
+}
+
+/* A short, gentle three-note chime for reminders before a prayer. */
+function remind() {
+  const c = getCtx();
+  if (!c || isOpen($('adhan'))) return false;
+  if (c.state !== 'running') { try { const r = c.resume(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+  const t0 = c.currentTime + 0.05;
+  [659.25, 783.99, 1046.5].forEach((f, i) => {
+    const o = c.createOscillator(), g = c.createGain(), at = t0 + i * 0.32;
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(0.22 * ctx.cfg.volume, at + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 1.6);
+    o.connect(g); g.connect(c.destination); o.start(at); o.stop(at + 1.7);
+  });
+  return true;
 }
 
 function tryPlay(list, i) {
@@ -176,7 +194,7 @@ export default {
     unlocked = !!(probe && probe.state === 'running');
     showSoundState();
     loadRecordings();
-    ctx.provide('adhan', { fire, hide, unlock });
+    ctx.provide('adhan', { fire, hide, unlock, remind });
   },
   onTick(now) {
     const t = ctx.use('times').today(now), day = dayKey(now);

@@ -29,6 +29,9 @@ What it does today:
   their time. The dua after the adhan shows when the adhan screen closes; an after-prayer dhikr
   when the prayer is over. Quiet from a minute before each adhan until 15 minutes after iqamah,
   and while the screen is dimmed. Content is JSON in `assets/content/` (see its README).
+- Reminders before each of the five prayers at 30, 15, 10 and 5 minutes (each can be turned
+  off): a banner drops in at the top with the iqamah time and a soft chime plays; the last one
+  stays until the adhan with a live countdown (`pre-prayer.js`).
 - Settings panel (gear icon), saved in localStorage: location, method, Asr school, per-prayer
   sound / iqamah / minute adjustment, Jumu'ah time, Hijri adjustment, 12/24h, night dimming.
 - Optional masjid feed: a Mawaqit mosque ID or a JSON feed URL. The masjid's iqamah times (and
@@ -46,8 +49,9 @@ What it does today:
 - `ctx`: `cfg`, `config` (store), `bus`, `slot(name)`, `provide/use` for services, `refresh()`.
   Services: `times` (prayer-times.js: `today`, `tomorrow`, `iqamah`, `name`, `current`),
   `feed` (masjid-feed.js), `adhan` (adhan-audio.js: `fire`, `hide`, `unlock`),
-  `background` (backgrounds.js: `current()`), `nightDim` (night-dim.js: `isDimmed()`).
-  Bus events: `config:change`, `adhan:start`, `adhan:end`. `ctx.precache(urls)` asks the
+  `background` (backgrounds.js: `current()`), `nightDim` (night-dim.js: `isDimmed()`),
+  `prePrayer` (pre-prayer.js: `active()`). The `adhan` service also has `remind()`, the soft chime.
+  Bus events: `config:change`, `adhan:start`, `adhan:end`, `prayer:soon`. `ctx.precache(urls)` asks the
   service worker to keep files offline.
 - Each feature builds its own markup into a named slot of `index.html` and contributes its own
   settings fields; the format is documented at the top of `js/features/settings.js`.
@@ -150,8 +154,8 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 ## Tests to keep
 
 `npm test` runs `tests/prayer-times.test.mjs` (table below, Hanafi, Hijri, iqamah rules) and
-`tests/slides.test.mjs` (content files complete, quiet times, adhkar windows, rotation).
-`node tests/browser/behavior.cjs` runs 46 browser checks with a fake clock (needs Playwright and
+`tests/slides.test.mjs` (content files complete, quiet times, adhkar windows, rotation,
+reminders before prayers). `node tests/browser/behavior.cjs` runs 58 browser checks with a fake clock (needs Playwright and
 `python3 -m http.server 8080`).
 
 ISNA, standard Asr. Computed times should match within one minute:

@@ -14,6 +14,7 @@ import dayBar from './day-bar.js';
 import prayerPanel from './prayer-panel.js';
 import burnIn from './burn-in.js';
 import slides from './slides.js';
+import prePrayer from './pre-prayer.js';
 import nightDim from './night-dim.js';
 import adhanAudio from './adhan-audio.js';
 import kiosk from './kiosk.js';
@@ -32,6 +33,7 @@ export default [
   prayerPanel,
   burnIn,
   slides,
+  prePrayer,
   nightDim,
   adhanAudio,
   kiosk,

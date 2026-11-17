@@ -5,6 +5,7 @@
    When slides show:
    - every `slideEvery` minutes (0 turns them off), rotating hadith, Quran and Names of Allah;
      in the morning (Fajr to Dhuhr) and evening (Asr to Isha) every other slide is a dhikr
+   - not while a reminder before a prayer is showing (js/features/pre-prayer.js)
    - never from a minute before an adhan until 15 minutes after its iqamah (people are
      praying), nor while the screen is dimmed at night or settings are open
    - the dua after the adhan as soon as the adhan screen closes
@@ -145,7 +146,8 @@ function blocked() {
   const dim = ctx.use('nightDim');
   const sheet = $('sheet');
   const adhan = $('adhan');
-  return (dim && dim.isDimmed()) || (sheet && !sheet.hidden) || (adhan && !adhan.hidden);
+  const pre = ctx.use('prePrayer');
+  return (dim && dim.isDimmed()) || (sheet && !sheet.hidden) || (adhan && !adhan.hidden) || (pre && pre.active());
 }
 
 function open(kind, item, label, now) {
@@ -226,6 +228,7 @@ export default {
     el.root.addEventListener('pointerdown', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
     ctx.bus.on('adhan:start', close);
+    ctx.bus.on('prayer:soon', close);
     ctx.bus.on('adhan:end', () => showAdhkar('after-adhan', new Date()));
     nextAt = Date.now() + FIRST_SLIDE_MS;
   },

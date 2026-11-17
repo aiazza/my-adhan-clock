@@ -211,6 +211,52 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     await context.close();
   }
 
+  /* 9. reminders before a prayer: banner, chime, slides give way, last one counts down */
+  {
+    const { context, page } = await fresh();
+    await page.addInitScript(() => {
+      window.__notes = 0;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const orig = AC.prototype.createOscillator;
+      AC.prototype.createOscillator = function () { window.__notes++; return orig.call(this); };
+    });
+    await page.clock.install({ time: new Date('2026-11-17T11:09:00-05:00') });   // Dhuhr 11:41
+    await page.goto(URL_);
+    await page.keyboard.press('Shift');                                            // sound on
+    await page.clock.runFor(60000);                                                // 11:10
+    ok('no banner 31 minutes before', await page.$eval('#pre', (e) => e.hidden));
+    let slideBefore = false;
+    for (let i = 0; i < 12 && !(await page.$eval('#pre', (e) => !e.hidden)); i++) {
+      slideBefore = slideBefore || !(await page.$eval('#slide', (e) => e.hidden));
+      await page.clock.runFor(5000);
+    }
+    const text = async () => (await page.$eval('#pre', (e) => Array.from(e.children).map((c) => c.textContent).join(' '))).replace(/\s+/g, ' ').trim();
+    ok('30 minute banner', /^الظهر Dhuhr in 30 minutes Iqamah 11:56$/.test(await text()), await text());
+    ok('soft chime played', await page.evaluate(() => window.__notes) === 3, 'notes: ' + await page.evaluate(() => window.__notes));
+    ok('reminder slide closed by the banner', await page.$eval('#slide', (e) => e.hidden), 'slide was open before: ' + slideBefore);
+    await page.clock.runFor(61000);
+    await page.waitForTimeout(700);
+    ok('banner leaves after a minute', await page.$eval('#pre', (e) => e.hidden));
+    await page.clock.fastForward('14:00');                                          // 11:26
+    await page.clock.runFor(3000);
+    ok('15 minute banner', /Dhuhr in 15 minutes/.test(await text()), await text());
+    await page.clock.fastForward('04:50');                                          // 11:31
+    await page.clock.runFor(10000);
+    ok('10 minute banner', /Dhuhr in 10 minutes/.test(await text()), await text());
+    await page.clock.fastForward('05:00');                                          // 11:36
+    await page.clock.runFor(4000);
+    ok('5 minute banner counts down', /Dhuhr in 4:5\d/.test(await text()), await text());
+    await page.clock.runFor(120000);
+    ok('still up two minutes later', !(await page.$eval('#pre', (e) => e.hidden)) && /Dhuhr in 2:5\d/.test(await text()), await text());
+    ok('one chime per reminder (30, 15, 10, 5)', await page.evaluate(() => window.__notes) === 12, 'notes: ' + await page.evaluate(() => window.__notes));
+    let gone = false;
+    for (let i = 0; i < 40 && !gone; i++) { await page.clock.runFor(5000); gone = await page.$eval('#adhan', (e) => !e.hidden); }
+    await page.waitForTimeout(700);
+    ok('banner gives way to the adhan screen', gone && await page.$eval('#pre', (e) => e.hidden));
+    ok('no page errors (9)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+
   await browser.close();
   console.log(results.join('\n'));
 })();

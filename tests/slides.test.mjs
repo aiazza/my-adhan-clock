@@ -93,3 +93,17 @@ test('slides stay up longer for longer texts, within 18-50 seconds', () => {
   assert.equal(durationFor('hadith', { en: 'Purity is half of faith.' }), 18);
   assert.equal(durationFor('names', {}), 15);
 });
+
+import { dueReminder } from '../js/features/pre-prayer.js';
+
+test('reminders 30, 15, 10 and 5 minutes before each adhan; the last one lasts until the adhan', () => {
+  const all = [30, 15, 10, 5];
+  assert.equal(dueReminder(at(11, 10), T, all), null);
+  assert.deepEqual([at(11, 11), at(11, 26), at(11, 31), at(11, 36)].map((d) => dueReminder(d, T, all).minutes), [30, 15, 10, 5]);
+  assert.equal(dueReminder(at(11, 12), T, all), null, 'each lasts one minute');
+  assert.equal(dueReminder(at(11, 40), T, all).minutes, 5, 'the 5 minute one holds until the adhan');
+  assert.equal(dueReminder(at(11, 41), T, all), null);
+  assert.equal(dueReminder(at(5, 15), T, all).k, 'fajr');
+  assert.equal(dueReminder(at(6, 34), T, all), null, 'no reminder before sunrise');
+  assert.equal(dueReminder(at(17, 50), T, [30, 15]).minutes, 15, 'with 15 the shortest, it holds until Isha');
+});

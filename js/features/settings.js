@@ -17,6 +17,7 @@ const SECTIONS = [
   ['calculation', 'Calculation'],
   ['feed', 'Masjid sync (optional)'],
   ['prayers', 'Prayers'],
+  ['before', 'Before each prayer'],
   ['audio', 'Adhan audio'],
   ['display', 'Display']
 ];
