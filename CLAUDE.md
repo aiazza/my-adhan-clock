@@ -40,6 +40,15 @@ What it does today:
   Isha to half an hour before Fajr, wake lock, hidden cursor when idle.
 - Works offline after the first visit (`sw.js`, network first for this site, so a git push shows
   up on the next page load).
+- Updates itself: `.github/workflows/publish.yml` publishes to GitHub Pages after the unit tests
+  pass and writes `version.json`; `updates.js` checks it every 30 minutes and reloads only at a
+  quiet time (no adhan within 30 minutes, not before 15 minutes after iqamah, nothing showing,
+  and not when sound was unlocked by a tap, since a reload would lock it again).
+- Settings from a computer: an optional `settings.json` (see `settings.example.json`) is applied
+  when its content changes (`settings-file.js`); tablet changes stay until the file changes.
+- Kiosk autoplay: the adhan player is a static `<audio id="adhanPlayer">` in `index.html`
+  (Fully Kiosk's "Autoplay audio" covers only static tags), and the page probes at start, so a
+  kiosk that allows autoplay needs no tap.
 
 ### How the code is organized
 
@@ -50,7 +59,8 @@ What it does today:
   Services: `times` (prayer-times.js: `today`, `tomorrow`, `iqamah`, `name`, `current`),
   `feed` (masjid-feed.js), `adhan` (adhan-audio.js: `fire`, `hide`, `unlock`),
   `background` (backgrounds.js: `current()`), `nightDim` (night-dim.js: `isDimmed()`),
-  `prePrayer` (pre-prayer.js: `active()`). The `adhan` service also has `remind()`, the soft chime.
+  `prePrayer` (pre-prayer.js: `active()`). The `adhan` service also has `remind()`, the soft chime,
+  and `sound()`: 'autoplay', 'tapped' or 'locked'.
   Bus events: `config:change`, `adhan:start`, `adhan:end`, `prayer:soon`. `ctx.precache(urls)` asks the
   service worker to keep files offline.
 - Each feature builds its own markup into a named slot of `index.html` and contributes its own
@@ -136,8 +146,12 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 - **Background images must be licensed for this use**: the owner's own, public domain, or CC0.
   Record the source and license of each image in `assets/backgrounds/README.md`.
 - Time zone comes from the device. Prayer timestamps are absolute, so DST is handled.
-- **Updates need a page load.** The page never reloads itself (a reload could re-lock audio on a
-  kiosk without autoplay). Use Fully Kiosk's scheduled reload, or add a safe reload later.
+- **Updates need a page load.** `updates.js` reloads at quiet times once `version.json` changes
+  (only on the published site). If sound was unlocked by a tap it never reloads, because that
+  would lock sound again; then Fully Kiosk's scheduled reload or Remote Admin does it.
+- **Hardware chosen (Nov 2026):** a Samsung Galaxy Tab A11 (8.7", SM-X133, international) on a
+  desk stand, with Fully Kiosk Browser (PLUS for Remote Admin). Check the layout on it. Turn on
+  Protect battery. The repository is not on GitHub yet; the owner is creating one.
 - **Bundled mp3 files are not cached offline** (media uses range requests; the worker skips
   them). Recordings chosen in settings live in IndexedDB and do work offline.
 - **Fallback calculation** lacks adhan-js's +1 minute Dhuhr adjustment, so its Dhuhr can be up
@@ -155,7 +169,8 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 
 `npm test` runs `tests/prayer-times.test.mjs` (table below, Hanafi, Hijri, iqamah rules) and
 `tests/slides.test.mjs` (content files complete, quiet times, adhkar windows, rotation,
-reminders before prayers). `node tests/browser/behavior.cjs` runs 60 browser checks with a fake clock (needs Playwright and
+reminders before prayers) and `tests/updates.test.mjs` (quiet-time reload rule, settings.json
+merge). `node tests/browser/behavior.cjs` runs 74 browser checks with a fake clock (needs Playwright and
 `python3 -m http.server 8080`).
 
 ISNA, standard Asr. Computed times should match within one minute:

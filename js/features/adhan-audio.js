@@ -2,7 +2,13 @@
    Sound source order: a recording chosen in settings (kept in IndexedDB on this device), then
    assets/audio/adhan.mp3 (adhan-fajr.mp3 for Fajr), then a synthesized chime.
    Browsers block sound until a user gesture; while blocked, a "Tap to enable" pill is shown.
-   Provides the 'adhan' service: { fire(k, withSound), hide(), unlock(), remind() }.
+   A kiosk that allows autoplay (Fully Kiosk's "Autoplay audio", Chromium's
+   --autoplay-policy=no-user-gesture-required) unlocks at start with no tap. The player is the
+   static <audio id="adhanPlayer"> in index.html, because Fully's setting only covers audio
+   tags that are in the page's HTML.
+   Provides the 'adhan' service: { fire(k, withSound), hide(), unlock(), remind(), sound() };
+   sound() is 'autoplay' (allowed without a tap), 'tapped' (unlocked by a tap, lost on reload)
+   or 'locked'.
    remind() plays a short soft chime (used before prayers); it is skipped while an adhan plays.
    Bus events: 'adhan:start' { k } when the screen opens, 'adhan:end' { k } when it closes. */
 import { dayKey, formatTime } from '../core/format.js';
@@ -18,7 +24,8 @@ const CHIME_MS = 12000;           // overlay time after the chime
 let ctx = null;
 let audioCtx = null;
 let unlocked = false;
-const player = new Audio();
+let how = 'locked';             // see sound() above
+const player = document.getElementById('adhanPlayer') || new Audio();
 player.preload = 'auto';
 const blobUrls = { main: null, fajr: null };
 let chimeTimer = null, hideTimer = null;
@@ -52,11 +59,14 @@ function showSoundState() {
    on a touch screen Chrome accepts the gesture on pointerup, not pointerdown, and a refused
    play() must leave the "Tap to enable" pill showing. */
 let silent = null;
-function unlock() {
+function unlock() { attempt('tapped'); }
+/* At start, with no gesture: succeeds only where the kiosk allows autoplay. */
+function probe() { attempt('autoplay'); }
+function attempt(kind) {
   if (unlocked) return;
   const c = getCtx();
   if (c && c.state !== 'running') { try { const r = c.resume(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
-  const done = () => { if (!unlocked) { unlocked = true; showSoundState(); } };
+  const done = () => { if (!unlocked) { unlocked = true; how = kind; showSoundState(); } };
   try {
     if (!silent) silent = silentUrl();
     player.src = silent;
@@ -190,11 +200,13 @@ export default {
       unlock();
       if (e.key === 'Escape') hide();
     });
-    const probe = getCtx();
-    unlocked = !!(probe && probe.state === 'running');
+    const ac = getCtx();
+    unlocked = !!(ac && ac.state === 'running');
+    if (unlocked) how = 'autoplay';
     showSoundState();
+    probe();
     loadRecordings();
-    ctx.provide('adhan', { fire, hide, unlock, remind });
+    ctx.provide('adhan', { fire, hide, unlock, remind, sound: () => how });
   },
   onTick(now) {
     const t = ctx.use('times').today(now), day = dayKey(now);

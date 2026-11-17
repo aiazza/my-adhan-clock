@@ -9,8 +9,29 @@ Plain JavaScript modules, no build step. See `CLAUDE.md` for goals, decisions an
 python3 -m http.server 8080
 ```
 
-Then open http://localhost:8080/. A static host (GitHub Pages, Cloudflare Pages) serves the
-repository as is. The service worker only runs over http(s), not from `file://`.
+Then open http://localhost:8080/. The service worker only runs over http(s), not from `file://`.
+
+## Publish and update
+
+`.github/workflows/publish.yml` publishes to GitHub Pages on every push to `main`, after the
+unit tests pass. One-time setup on GitHub: Settings → Pages → Source: **GitHub Actions**.
+The workflow also writes `version.json`; the clock checks it every 30 minutes and reloads
+itself at a quiet time (`js/features/updates.js`), so a push reaches the tablet on its own.
+
+## Settings from a computer
+
+Put a `settings.json` next to `index.html` (copy `settings.example.json` and keep only the
+keys you want). The clock applies it whenever its content changes; anything it leaves out
+keeps its current value, and a later change with the gear icon stays until the file changes
+again. Iqamah is minutes after the adhan (`"15"`) or a fixed time (`"13:30"`).
+
+## On the tablet (Fully Kiosk Browser)
+
+Start URL: the Pages address. Turn on Keep Screen On, Start on Boot, and Web Content →
+**Autoplay Audio**, so the adhan plays with no tap (the player is a static `<audio>` tag in
+`index.html` for this reason). Remote Admin (PLUS licence) lets a computer on the same Wi-Fi
+reload the page, change the volume or turn the screen off. On a Samsung tablet, turn on
+Settings → Battery → Protect battery so it can stay plugged in.
 
 ## Test
 
@@ -39,6 +60,8 @@ assets/audio/           optional adhan.mp3 / adhan-fajr.mp3
 assets/backgrounds/     CC0 Islamic art from The Met, index.json lists them (README has licenses)
 assets/content/         hadith, Quran, adhkar, Names of Allah for the reminder slides (README)
 sw.js                   offline cache
+settings.example.json   every config key, for settings.json
+.github/workflows/      publish.yml: tests, version.json, GitHub Pages
 tests/                  node --test unit tests; browser/ Playwright checks
 reference/              the original single-file prototype, kept for comparison
 ```

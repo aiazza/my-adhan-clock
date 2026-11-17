@@ -1,0 +1,40 @@
+{
+  "_help": "Copy this file to settings.json and keep only the lines you want to set. The clock applies settings.json when its content changes; keys starting with _ are ignored. Iqamah: minutes after the adhan (\"15\") or a fixed time (\"13:30\").",
+
+  "place": "Queens, New York",
+  "lat": 40.7282,
+  "lng": -73.7949,
+  "method": "ISNA",
+  "_method_choices": "ISNA, MWL, Egypt, Karachi, Makkah, Moonsighting",
+  "asr": 1,
+  "_asr_choices": "1 = standard, 2 = Hanafi",
+  "jumuah": "13:15",
+
+  "prayers": {
+    "fajr":    { "sound": true, "iqamah": "20", "adjust": 0 },
+    "dhuhr":   { "sound": true, "iqamah": "15", "adjust": 0 },
+    "asr":     { "sound": true, "iqamah": "15", "adjust": 0 },
+    "maghrib": { "sound": true, "iqamah": "5",  "adjust": 0 },
+    "isha":    { "sound": true, "iqamah": "15", "adjust": 0 }
+  },
+
+  "feed": "",
+  "feedTimes": false,
+  "hijriAdjust": 0,
+
+  "hour24": false,
+  "seconds": true,
+  "nightDim": true,
+  "bgMode": "art",
+  "_bgMode_choices": "art, sky",
+  "bgMinutes": 10,
+
+  "slideEvery": 10,
+  "_slideEvery_choices": "0 (never), 5, 10, 15, 30",
+  "slideKinds": { "hadith": true, "quran": true, "adhkar": true, "names": true },
+
+  "preMinutes": { "m30": true, "m15": true, "m10": true, "m5": true },
+  "preChime": true,
+  "volume": 0.9,
+  "autoUpdate": true
+}

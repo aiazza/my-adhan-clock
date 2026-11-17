@@ -265,6 +265,96 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     await context.close();
   }
 
+  /* 10-12. safe automatic updates: version.json changes, the clock reloads at a quiet time */
+  const updatesPage = async (startAt) => {
+    const { context, page } = await fresh();
+    const v = { version: 'a' };
+    await page.route('**/version.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(v) }));
+    await page.addInitScript(() => localStorage.setItem('azan-clock-config-v1', JSON.stringify({ slideEvery: 0 })));
+    await page.clock.install({ time: new Date(startAt) });
+    await page.goto(URL_);
+    await page.clock.runFor(2000);
+    await page.waitForTimeout(300);                 // the first version.json read
+    await page.evaluate(() => { window.__mark = 1; });
+    v.version = 'b';
+    const reloaded = async () => { try { return await page.evaluate(() => window.__mark !== 1); } catch (e) { return false; } };
+    /* Runs a minute at a time; returns the clock time (h:mm) at the end of the minute in which the
+       page reloaded (the reload happens on that minute boundary), or ''. */
+    const runUntilReload = async (minutes) => {
+      for (let i = 0; i < minutes; i++) {
+        const end = await page.evaluate(() => { const d = new Date(Date.now() + 60000); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); });
+        await page.clock.runFor(60000);
+        await page.waitForTimeout(150);
+        if (await reloaded()) return end;
+      }
+      return '';
+    };
+    return { context, page, reloaded, runUntilReload };
+  };
+  {
+    const { context, page, reloaded, runUntilReload } = await updatesPage('2026-11-17T09:00:05-05:00');
+    await page.clock.runFor(25 * 60000);
+    await page.waitForTimeout(300);
+    ok('no reload before the 30 minute check', !(await reloaded()));
+    const when = await runUntilReload(12);
+    ok('reloads soon after the next check on a calm morning', /^9:3[1-4]$/.test(when), 'reloaded during ' + when);
+    ok('no page errors (10)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+  {
+    const { context, page, runUntilReload } = await updatesPage('2026-11-17T10:45:05-05:00');
+    const when = await runUntilReload(100);
+    ok('update found at 11:16 waits until 15 minutes after Dhuhr iqamah (12:11)', /^12:1[1-2]$/.test(when), 'reloaded during ' + (when || 'never'));
+    ok('no page errors (11)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+  {
+    const { context, page, runUntilReload } = await updatesPage('2026-11-17T09:00:05-05:00');
+    await page.mouse.click(640, 300);
+    await page.waitForTimeout(500);
+    ok('a tap unlocked the sound', await page.$eval('#soundPill', (e) => e.hidden));
+    const when = await runUntilReload(45);
+    ok('no automatic reload when sound was unlocked by a tap (it would lock again)', when === '', 'reloaded during ' + when);
+    await context.close();
+  }
+
+  /* 13. settings.json from the site is applied once per change */
+  {
+    const { context, page } = await fresh();
+    const file = { body: JSON.stringify({ place: 'From the file', prayers: { dhuhr: { iqamah: '13:30' } }, _help: 'ignored' }) };
+    await page.route('**/settings.json', (r) => r.fulfill({ contentType: 'application/json', body: file.body }));
+    await page.clock.setFixedTime(new Date('2026-11-17T09:00:05-05:00'));
+    await page.goto(URL_);
+    await page.waitForTimeout(800);
+    const saved = async () => page.evaluate(() => JSON.parse(localStorage.getItem('azan-clock-config-v1') || '{}'));
+    let cfg = await saved();
+    ok('settings.json applied', (await text(page, '#place')) === 'From the file' && cfg.prayers.dhuhr.iqamah === '13:30', await text(page, '#place'));
+    ok('keys the file leaves out keep their values', cfg.prayers.fajr.iqamah === '20' && cfg.prayers.dhuhr.sound === true && cfg.method === 'ISNA');
+    await page.evaluate(() => { const c = JSON.parse(localStorage.getItem('azan-clock-config-v1')); c.place = 'Changed on the tablet'; localStorage.setItem('azan-clock-config-v1', JSON.stringify(c)); });
+    await page.reload();
+    await page.waitForTimeout(800);
+    ok('an unchanged file does not undo a change made on the tablet', (await text(page, '#place')) === 'Changed on the tablet', await text(page, '#place'));
+    file.body = JSON.stringify({ place: 'Edited file' });
+    await page.reload();
+    await page.waitForTimeout(800);
+    cfg = await saved();
+    ok('an edited file is applied on the next load', (await text(page, '#place')) === 'Edited file' && cfg.prayers.dhuhr.iqamah === '13:30', await text(page, '#place'));
+    ok('no page errors (13)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+
+  /* 14. a kiosk that allows autoplay needs no tap */
+  {
+    const auto = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'], proxy: { server: process.env.HTTPS_PROXY, bypass: 'localhost,127.0.0.1' } });
+    const context = await auto.newContext({ viewport: { width: 1280, height: 800 }, timezoneId: 'America/New_York', serviceWorkers: 'block' });
+    const page = await context.newPage();
+    await page.goto(URL_);
+    await page.waitForTimeout(800);
+    ok('with autoplay allowed, sound is on at start with no tap', await page.$eval('#soundPill', (e) => e.hidden));
+    ok('the adhan player is the static audio tag', await page.$eval('#adhanPlayer', (e) => e.tagName === 'AUDIO'));
+    await auto.close();
+  }
+
   await browser.close();
   console.log(results.join('\n'));
 })();

@@ -2,6 +2,7 @@
    exports the feature object (see js/main.js for the interface) and add one line here.
    Order matters in two ways: services are provided before later features use them at tick
    time, and features that add buttons to the same slot appear in this order. */
+import settingsFile from './settings-file.js';
 import masjidFeed from './masjid-feed.js';
 import prayerTimes from './prayer-times.js';
 import pattern from './pattern.js';
@@ -18,9 +19,11 @@ import prePrayer from './pre-prayer.js';
 import nightDim from './night-dim.js';
 import adhanAudio from './adhan-audio.js';
 import kiosk from './kiosk.js';
+import updates from './updates.js';
 import settings from './settings.js';
 
 export default [
+  settingsFile,
   masjidFeed,
   prayerTimes,
   pattern,
@@ -37,5 +40,6 @@ export default [
   nightDim,
   adhanAudio,
   kiosk,
+  updates,
   settings
 ];
