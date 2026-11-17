@@ -1,6 +1,10 @@
 # Publishes the clock to GitHub Pages on every push to the main branch, after the unit tests
 # pass. It also writes version.json (the commit id), which the clock checks to update itself
 # (js/features/updates.js). One-time setup: Settings > Pages > Source: "GitHub Actions".
+#
+# Build and deploy are separate jobs: in one job, deploy-pages can look for the uploaded site
+# before GitHub lists it ("No artifacts named github-pages"). The artifact name carries the run
+# attempt, so "Re-run jobs" uploads a fresh one instead of colliding with the first.
 name: Publish
 
 on:
@@ -18,11 +22,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -41,5 +42,16 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+          name: github-pages-${{ github.run_attempt }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
