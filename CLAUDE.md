@@ -8,8 +8,8 @@ It replaces a commercial azan frame. Two goals drive every decision:
 
 ## Current state
 
-Roadmap steps 1 and 2 are done. The app is `index.html` plus ES modules (layout below and in
-`README.md`). The original single-file prototype is kept in `reference/azan-clock.html` for
+Roadmap steps 1, 2 and 3 are done, and part of step 4 (adhkar and the dua after the adhan).
+The app is `index.html` plus ES modules (layout below and in `README.md`). The original single-file prototype is kept in `reference/azan-clock.html` for
 comparison; `tests/browser/compare-with-prototype.cjs` diffs the two.
 
 What it does today:
@@ -22,7 +22,13 @@ What it does today:
   midnight-to-midnight day bar with a marker for now.
 - Plays the adhan at each prayer time. Source order: a recording chosen in settings (stored in
   IndexedDB), then `assets/audio/adhan.mp3` / `adhan-fajr.mp3`, then a synthesized chime.
-- Sky gradient behind the clock follows the real sun for the configured location.
+- Background: Islamic art from The Met (12 CC0 works in `assets/backgrounds/`), crossfading
+  every 10 minutes under a dark scrim; or the sky gradient that follows the real sun.
+- Reminder slides (full screen, small clock and countdown in the corner) every 10 minutes:
+  hadith, Quran verses (Pickthall translation), Names of Allah, and morning / evening adhkar in
+  their time. The dua after the adhan shows when the adhan screen closes; an after-prayer dhikr
+  when the prayer is over. Quiet from a minute before each adhan until 15 minutes after iqamah,
+  and while the screen is dimmed. Content is JSON in `assets/content/` (see its README).
 - Settings panel (gear icon), saved in localStorage: location, method, Asr school, per-prayer
   sound / iqamah / minute adjustment, Jumu'ah time, Hijri adjustment, 12/24h, night dimming.
 - Optional masjid feed: a Mawaqit mosque ID or a JSON feed URL. The masjid's iqamah times (and
@@ -39,7 +45,10 @@ What it does today:
   onMinute(now), settings }`. `js/features/index.js` lists the enabled ones in mount order.
 - `ctx`: `cfg`, `config` (store), `bus`, `slot(name)`, `provide/use` for services, `refresh()`.
   Services: `times` (prayer-times.js: `today`, `tomorrow`, `iqamah`, `name`, `current`),
-  `feed` (masjid-feed.js), `adhan` (adhan-audio.js: `fire`, `hide`, `unlock`).
+  `feed` (masjid-feed.js), `adhan` (adhan-audio.js: `fire`, `hide`, `unlock`),
+  `background` (backgrounds.js: `current()`), `nightDim` (night-dim.js: `isDimmed()`).
+  Bus events: `config:change`, `adhan:start`, `adhan:end`. `ctx.precache(urls)` asks the
+  service worker to keep files offline.
 - Each feature builds its own markup into a named slot of `index.html` and contributes its own
   settings fields; the format is documented at the top of `js/features/settings.js`.
 - `js/core/time.js` ticks once per second on the second boundary.
@@ -86,9 +95,10 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
    glow animate opacity / transform only, day-bar marker moves by transform, status line
    rewrites only the number, overlays fade (sheet slides), reduced motion respected. Still to
    do: check smoothness on the real tablet.
-3. **Cycling backgrounds.** Rotate through high resolution Islamic artwork and photography behind
-   the clock, crossfading. Keep the sky gradient as one of the modes.
-4. **Quran and audio.** Quran player, adhkar, dua after the adhan.
+3. **Cycling backgrounds.** Done for Islamic art (`backgrounds.js`); the sky gradient is the
+   other mode. Photography could be added the same way if the owner supplies or licenses it.
+4. **Quran and audio.** Adhkar and the dua after the adhan are done as reminder slides
+   (`slides.js`). Still to do: a Quran player and any recited audio.
 5. **Masjid content.** Reliable iqamah sync, announcements, Jumu'ah, Ramadan timetable.
 
 ## Performance rules
@@ -128,13 +138,20 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
   them). Recordings chosen in settings live in IndexedDB and do work offline.
 - **Fallback calculation** lacks adhan-js's +1 minute Dhuhr adjustment, so its Dhuhr can be up
   to 2 minutes early. It only runs if `vendor/adhan.umd.min.js` fails to load.
+- **Reminder English needs review.** The Arabic in `assets/content/` was checked word for word
+  against the hadith and Quran datasets named in its README; the English for hadith, duas and
+  names was written for this project. The owner's imam or a teacher should review it.
+- **Network**: this cloud environment allows `collectionapi.metmuseum.org` and
+  `images.metmuseum.org` (for picking art); hadith and Quran data came from
+  raw.githubusercontent.com (fawazahmed0/hadith-api and quran-api).
 - Google Fonts are still loaded from Google (cached by the worker). Vendoring them into `assets/`
   would remove the first-visit dependency.
 
 ## Tests to keep
 
-`npm test` runs `tests/prayer-times.test.mjs` (table below, Hanafi, Hijri, iqamah rules).
-`node tests/browser/behavior.cjs` runs 29 browser checks with a fake clock (needs Playwright and
+`npm test` runs `tests/prayer-times.test.mjs` (table below, Hanafi, Hijri, iqamah rules) and
+`tests/slides.test.mjs` (content files complete, quiet times, adhkar windows, rotation).
+`node tests/browser/behavior.cjs` runs 46 browser checks with a fake clock (needs Playwright and
 `python3 -m http.server 8080`).
 
 ISNA, standard Asr. Computed times should match within one minute:
@@ -149,5 +166,6 @@ Hanafi Asr for the Queens row is 5:31. 16 November 2026 is 6 Jumada II 1448 befo
 
 ## Next session
 
-Steps 1 and 2 are done. Before step 3, check the clock on the real tablet (smoothness, autoplay,
-a real adhan recording). Then cycling backgrounds as a new feature file with two stacked layers.
+Check the clock on the real tablet: smoothness of the art crossfade and slide fades, autoplay,
+a real adhan recording. Get the reminder English reviewed. Then the rest of step 4 (Quran
+player) or step 5, after asking which masjid platform the owner uses.

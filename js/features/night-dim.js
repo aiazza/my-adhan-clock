@@ -13,6 +13,7 @@ export default {
     ctx = c;
     ctx.slot('overlays').appendChild(html('<div class="dim" id="dim"></div>'));
     dim = $('dim');
+    ctx.provide('nightDim', { isDimmed: () => dim.classList.contains('on') });
     document.addEventListener('pointerdown', () => {
       undimUntil = Date.now() + 30000;
       dim.classList.remove('on');

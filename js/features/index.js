@@ -5,6 +5,7 @@
 import masjidFeed from './masjid-feed.js';
 import prayerTimes from './prayer-times.js';
 import pattern from './pattern.js';
+import backgrounds from './backgrounds.js';
 import sky from './sky.js';
 import dates from './dates.js';
 import clock from './clock.js';
@@ -12,6 +13,7 @@ import countdown from './countdown.js';
 import dayBar from './day-bar.js';
 import prayerPanel from './prayer-panel.js';
 import burnIn from './burn-in.js';
+import slides from './slides.js';
 import nightDim from './night-dim.js';
 import adhanAudio from './adhan-audio.js';
 import kiosk from './kiosk.js';
@@ -21,6 +23,7 @@ export default [
   masjidFeed,
   prayerTimes,
   pattern,
+  backgrounds,
   sky,
   dates,
   clock,
@@ -28,6 +31,7 @@ export default [
   dayBar,
   prayerPanel,
   burnIn,
+  slides,
   nightDim,
   adhanAudio,
   kiosk,

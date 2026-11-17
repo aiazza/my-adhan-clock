@@ -36,7 +36,8 @@ js/lib/praycalc.js      built-in fallback calculation
 js/features/            one file per feature; index.js lists the enabled ones
 vendor/                 adhan-js 4.4.6 (MIT)
 assets/audio/           optional adhan.mp3 / adhan-fajr.mp3
-assets/backgrounds/     background images (with license records)
+assets/backgrounds/     CC0 Islamic art from The Met, index.json lists them (README has licenses)
+assets/content/         hadith, Quran, adhkar, Names of Allah for the reminder slides (README)
 sw.js                   offline cache
 tests/                  node --test unit tests; browser/ Playwright checks
 reference/              the original single-file prototype, kept for comparison

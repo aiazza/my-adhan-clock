@@ -1,5 +1,7 @@
 /* Prayer time and Hijri checks from CLAUDE.md ("Tests to keep"). Run with `npm test`.
-   Times are formatted in America/New_York, so the result does not depend on the machine's zone. */
+   The app assumes the device's time zone matches its location, so these tests model a tablet
+   in New York whatever the machine running them is set to. */
+process.env.TZ = 'America/New_York';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -89,8 +91,9 @@ test('iqamah: minutes after adhan, fixed time, empty, and Jumu\'ah on Fridays', 
 });
 
 test('16 November 2026 is 6 Jumada II 1448 before Maghrib, 7 after', () => {
-  const maghrib = new Date(Date.UTC(2026, 10, 16, 21, 38));   // 4:38 pm New York
-  assert.equal(hijriFor(new Date(Date.UTC(2026, 10, 16, 17, 0)), maghrib, 0), '6 Jumada II 1448 AH');
-  assert.equal(hijriFor(new Date(Date.UTC(2026, 10, 16, 22, 0)), maghrib, 0), '7 Jumada II 1448 AH');
-  assert.equal(hijriFor(new Date(Date.UTC(2026, 10, 16, 17, 0)), maghrib, -1), '5 Jumada II 1448 AH');
+  /* local times, so the check holds in any time zone */
+  const maghrib = new Date(2026, 10, 16, 16, 38);
+  assert.equal(hijriFor(new Date(2026, 10, 16, 12, 0), maghrib, 0), '6 Jumada II 1448 AH');
+  assert.equal(hijriFor(new Date(2026, 10, 16, 17, 0), maghrib, 0), '7 Jumada II 1448 AH');
+  assert.equal(hijriFor(new Date(2026, 10, 16, 12, 0), maghrib, -1), '5 Jumada II 1448 AH');
 });

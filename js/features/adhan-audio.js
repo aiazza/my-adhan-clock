@@ -2,7 +2,8 @@
    Sound source order: a recording chosen in settings (kept in IndexedDB on this device), then
    assets/audio/adhan.mp3 (adhan-fajr.mp3 for Fajr), then a synthesized chime.
    Browsers block sound until a user gesture; while blocked, a "Tap to enable" pill is shown.
-   Provides the 'adhan' service: { fire(k, withSound), hide(), unlock() }. */
+   Provides the 'adhan' service: { fire(k, withSound), hide(), unlock() }.
+   Bus events: 'adhan:start' { k } when the screen opens, 'adhan:end' { k } when it closes. */
 import { dayKey, formatTime } from '../core/format.js';
 import { $, html, readNumber, openLayer, closeLayer, isOpen } from '../core/dom.js';
 import { FIVE } from './prayer-times.js';
@@ -20,6 +21,7 @@ const player = new Audio();
 player.preload = 'auto';
 const blobUrls = { main: null, fajr: null };
 let chimeTimer = null, hideTimer = null;
+let firing = null;              // prayer whose adhan screen is up
 const fired = {};
 
 function getCtx() {
@@ -95,6 +97,8 @@ function fire(k, withSound) {
   $('adhanEn').textContent = 'Time for ' + name[0];
   $('adhanAt').textContent = at.t + ' ' + at.ap;
   openLayer($('adhan'));
+  firing = k;
+  ctx.bus.emit('adhan:start', { k });
   clearTimeout(hideTimer); clearTimeout(chimeTimer);
   hideTimer = setTimeout(hide, OVERLAY_MS);
   if (!withSound) { chimeTimer = setTimeout(hide, SILENT_MS); return; }
@@ -107,7 +111,9 @@ function fire(k, withSound) {
 function hide() {
   clearTimeout(hideTimer); clearTimeout(chimeTimer);
   try { player.pause(); } catch (e) {}
+  const was = isOpen($('adhan'));
   closeLayer($('adhan'));
+  if (was) { ctx.bus.emit('adhan:end', { k: firing }); firing = null; }
 }
 
 /* Recordings chosen in settings are kept in IndexedDB on this device. */

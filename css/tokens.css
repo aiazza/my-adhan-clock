@@ -17,5 +17,12 @@
   --font-display: 'Marcellus', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
   --font-body: 'Outfit', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-arabic: 'Reem Kufi', 'Noto Kufi Arabic', 'Noto Naskh Arabic', 'Geeza Pro', 'Segoe UI', serif;
+  /* Reminder text: Amiri for hadith and duas, Amiri Quran for verses (both read well with full vowel marks). */
+  --font-naskh: 'Amiri', 'Noto Naskh Arabic', 'Geeza Pro', 'Times New Roman', serif;
+  --font-quran: 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', 'Geeza Pro', serif;
+  /* Scrim over the art backgrounds: darkest behind the clock, a little lighter at the edges. */
+  --scrim-core: rgba(6, 9, 26, .5);
+  --scrim-mid: rgba(6, 9, 26, .6);
+  --scrim-edge: rgba(6, 9, 26, .72);
   color-scheme: dark;
 }

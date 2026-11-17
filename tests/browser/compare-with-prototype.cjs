@@ -35,7 +35,9 @@ const SCEN = [
       page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
       await page.route('https://cdn.jsdelivr.net/**', (r) => r.fulfill({ body: VENDOR, contentType: 'application/javascript' }));
       await page.clock.setFixedTime(new Date(s.at));
-      if (s.cfg) await page.addInitScript((c) => localStorage.setItem('azan-clock-config-v1', JSON.stringify(c)), s.cfg);
+      /* the prototype only had the sky background and no reminder slides */
+      const cfg = Object.assign({ bgMode: 'sky', slideEvery: 0 }, s.cfg || {});
+      await page.addInitScript((c) => localStorage.setItem('azan-clock-config-v1', JSON.stringify(c)), cfg);
       await page.goto(url, { waitUntil: 'networkidle' });
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(1500);

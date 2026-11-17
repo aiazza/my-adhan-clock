@@ -140,6 +140,77 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     await context.close();
   }
 
+  /* 6. art backgrounds crossfade on schedule */
+  {
+    const { context, page } = await fresh();
+    await page.clock.install({ time: new Date('2026-11-17T09:00:05-05:00') });
+    await page.goto(URL_);
+    await page.clock.runFor(3000);
+    const shown = () => page.$$eval('.bg-layer.show', (l) => l.map((x) => x.getAttribute('src')));
+    const first = await shown();
+    ok('art mode by default, one image showing', first.length === 1 && /assets\/backgrounds\/.+\.webp$/.test(first[0]) && await page.$eval('body', (b) => b.classList.contains('bg-art')), first.join());
+    ok('star lattice hidden over art', await page.$eval('#pattern', (e) => getComputedStyle(e).display === 'none'));
+    await page.clock.runFor(10 * 60000 + 2000);
+    await page.waitForTimeout(1500);              // the image decodes in real time
+    const second = await shown();
+    ok('next image after 10 minutes', second.length === 1 && second[0] !== first[0], first[0] + ' -> ' + second[0]);
+    ok('crossfade uses an opacity transition', await page.$eval('.bg-layer', (e) => getComputedStyle(e).transitionProperty === 'opacity'));
+    ok('no page errors (6)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+
+  /* 7. reminder slides: show, close, pause during prayer */
+  {
+    const { context, page } = await fresh();
+    await page.clock.install({ time: new Date('2026-11-17T09:00:05-05:00') });
+    await page.goto(URL_);
+    await page.clock.runFor(30000);
+    ok('no slide in the first minute', await page.$eval('#slide', (e) => e.hidden));
+    await page.clock.runFor(35000);
+    const kind = await page.$eval('#slideKind', (e) => e.textContent);
+    ok('first slide after a minute', !(await page.$eval('#slide', (e) => e.hidden)) && kind.length > 0, kind);
+    await page.waitForTimeout(1000);              // CSS fades run in real time
+    ok('clock hidden behind the slide', await page.$eval('#stage', (e) => getComputedStyle(e).opacity === '0'));
+    ok('corner clock on the slide', /^9:01 AM$/.test(await page.$eval('#slideTime', (e) => e.textContent)), await page.$eval('#slideTime', (e) => e.textContent));
+    await page.clock.runFor(52000);
+    await page.waitForTimeout(1000);
+    ok('slide closes by itself within 50 s', await page.$eval('#slide', (e) => e.hidden) && await page.$eval('#stage', (e) => getComputedStyle(e).opacity === '1'));
+    // jump to just before Dhuhr (11:41): nothing may show until 15 min after iqamah (11:56)
+    await page.clock.fastForward('02:38:00');
+    let during = false, duaAt = '';
+    for (let i = 0; i < 40 * 12; i++) {
+      await page.clock.runFor(5000);
+      if (await page.$eval('#slide', (e) => e.hidden)) continue;
+      const k = await page.$eval('#slideKind', (e) => e.textContent), at = await page.$eval('#slideTime', (e) => e.textContent);
+      if (k === 'After the adhan') { duaAt = duaAt || at; continue; }   // allowed: follows the adhan screen
+      during = at + ' ' + k; break;
+    }
+    ok('dua after the Dhuhr adhan at 11:41', duaAt === '11:41 AM', duaAt);
+    ok('next slide only 15 minutes after iqamah, an after-prayer dhikr', /^12:11 PM After the prayer$/.test(during), 'first slide: ' + during);
+    ok('no page errors (7)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+
+  /* 8. the dua after the adhan follows the adhan screen; sky mode still works */
+  {
+    const { context, page } = await fresh();
+    await page.addInitScript(() => localStorage.setItem('azan-clock-config-v1', JSON.stringify({ bgMode: 'sky' })));
+    await page.clock.install({ time: new Date('2026-11-17T14:13:40-05:00') });
+    await page.goto(URL_);
+    await page.clock.runFor(2000);
+    ok('sky mode: no art, lattice visible', !(await page.$eval('body', (b) => b.classList.contains('bg-art'))) && await page.$eval('#pattern', (e) => getComputedStyle(e).display !== 'none'));
+    let open = false;
+    for (let i = 0; i < 60 && !open; i++) { await page.clock.runFor(1000); open = await page.$eval('#adhan', (e) => !e.hidden); }
+    ok('Asr adhan screen opens', open);
+    await page.click('#silenceBtn');
+    await page.clock.runFor(1500);
+    const k = await page.$eval('#slideKind', (e) => e.textContent);
+    const ref = await page.$eval('#slideRef', (e) => e.textContent);
+    ok('dua after the adhan shows when the adhan ends', !(await page.$eval('#slide', (e) => e.hidden)) && k === 'After the adhan' && ref === 'Sahih al-Bukhari 614', k + ' / ' + ref);
+    ok('no page errors (8)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+
   await browser.close();
   console.log(results.join('\n'));
 })();

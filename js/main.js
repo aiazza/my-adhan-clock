@@ -18,6 +18,7 @@
                           center, daybar, prayers, overlays (see index.html)
      ctx.provide(name, api) / ctx.use(name)   share a service ('times', 'feed', 'adhan')
      ctx.refresh()        recompute and re-render everything now
+     ctx.precache(urls)   ask the service worker to keep these files for offline use
      ctx.rev              bumps on every refresh, for memo keys
      ctx.features         the enabled feature list */
 import { createBus } from './core/bus.js';
@@ -61,7 +62,12 @@ const ctx = {
   slot: (name) => document.querySelector('[data-slot="' + name + '"]'),
   provide: (name, api) => { services[name] = api; },
   use: (name) => services[name] || null,
-  refresh() { ctx.rev++; timeline.refresh(); }
+  refresh() { ctx.rev++; timeline.refresh(); },
+  precache(urls) {
+    if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+    const abs = urls.map((u) => new URL(u, location.href).href);
+    navigator.serviceWorker.ready.then((r) => { if (r.active) r.active.postMessage({ type: 'cache-urls', urls: abs }); }).catch(() => {});
+  }
 };
 
 each('mount', ctx);
