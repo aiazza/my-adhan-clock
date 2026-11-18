@@ -1,0 +1,25 @@
+/* Large text (js/features/text-size.js). Bigger prayer row and countdown, a smaller big clock
+   to make room. Sizes follow the screen (vmin), so it works the same on any tablet. */
+body.text-large .hm { font-size: min(21vw, 29vh); }
+body.text-large .side { font-size: min(3.2vw, 4.6vh); }
+body.text-large .status { font-size: clamp(1.3rem, 5vmin, 3.2rem); }
+body.text-large .date-main { font-size: clamp(1.2rem, 3.6vmin, 2.4rem); }
+body.text-large .date-sub { font-size: clamp(.9rem, 2.3vmin, 1.4rem); }
+
+body.text-large .prayer { gap: .15em; padding-left: clamp(4px, .8vmin, 12px); padding-right: clamp(4px, .8vmin, 12px); }
+body.text-large .prayer .ar { font-size: clamp(1.3rem, 4.4vmin, 2.8rem); }
+body.text-large .prayer .en { font-size: clamp(.8rem, 2.3vmin, 1.4rem); letter-spacing: .12em; }
+body.text-large .prayer .time { font-size: clamp(1.6rem, 6.4vmin, 4.2rem); font-weight: 400; letter-spacing: -.02em; }
+body.text-large .prayer .time small { font-size: .36em; margin-left: .15em; }
+body.text-large .prayer .iq { font-size: clamp(.95rem, 3.1vmin, 1.9rem); color: var(--ink-soft); }
+
+@media (max-width: 760px) {
+  body.text-large .hm { font-size: min(24vw, 24vh); }
+}
+
+/* Standing upright, six large columns do not fit: two rows of three. */
+@media (orientation: portrait) and (min-width: 761px) {
+  body.text-large .prayers { grid-template-columns: repeat(3, 1fr); }
+  body.text-large .prayer:nth-child(4) { border-left: 0; }
+  body.text-large .prayer:nth-child(n+4) { border-top: 1px solid var(--line); }
+}

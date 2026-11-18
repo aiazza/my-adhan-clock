@@ -46,6 +46,9 @@ What it does today:
   and not when sound was unlocked by a tap, since a reload would lock it again).
 - Settings from a computer: an optional `settings.json` (see `settings.example.json`) is applied
   when its content changes (`settings-file.js`); tablet changes stay until the file changes.
+- Large text option (Settings > Display; `text-size.js`, `css/text-size.css`): bigger prayer row,
+  iqamah and countdown, smaller big clock, for reading the 8.7" tablet from across a room. In
+  portrait the prayer row becomes two rows of three.
 - Kiosk autoplay: the adhan player is a static `<audio id="adhanPlayer">` in `index.html`
   (Fully Kiosk's "Autoplay audio" covers only static tags), and the page probes at start, so a
   kiosk that allows autoplay needs no tap.
@@ -171,7 +174,7 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 `npm test` runs `tests/prayer-times.test.mjs` (table below, Hanafi, Hijri, iqamah rules) and
 `tests/slides.test.mjs` (content files complete, quiet times, adhkar windows, rotation,
 reminders before prayers) and `tests/updates.test.mjs` (quiet-time reload rule, settings.json
-merge). `node tests/browser/behavior.cjs` runs 76 browser checks with a fake clock (needs Playwright and
+merge). `node tests/browser/behavior.cjs` runs 80 browser checks with a fake clock (needs Playwright and
 `python3 -m http.server 8080`).
 
 ISNA, standard Asr. Computed times should match within one minute:

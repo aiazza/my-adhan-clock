@@ -53,6 +53,10 @@ body.idle { cursor: none; }
   .top { grid-template-columns: 1fr auto; }
   .hijri { grid-column: 1 / -1; grid-row: 2; text-align: left; }
 }
+@media (max-width: 480px) {
+  .top { grid-template-columns: minmax(0, 1fr) auto; }
+  .pill { white-space: normal; max-width: 8.5em; text-align: center; line-height: 1.2; }
+}
 @media (prefers-reduced-motion: reduce) {
   .stage { transition: none; }
 }

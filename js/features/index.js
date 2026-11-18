@@ -10,6 +10,7 @@ import backgrounds from './backgrounds.js';
 import sky from './sky.js';
 import dates from './dates.js';
 import clock from './clock.js';
+import textSize from './text-size.js';
 import countdown from './countdown.js';
 import dayBar from './day-bar.js';
 import prayerPanel from './prayer-panel.js';
@@ -31,6 +32,7 @@ export default [
   sky,
   dates,
   clock,
+  textSize,
   countdown,
   dayBar,
   prayerPanel,

@@ -25,6 +25,7 @@
   "hour24": false,
   "seconds": true,
   "nightDim": true,
+  "largeText": false,
   "bgMode": "art",
   "_bgMode_choices": "art, sky",
   "bgMinutes": 10,

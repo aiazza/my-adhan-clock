@@ -372,6 +372,34 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     await auto.close();
   }
 
+  /* 15. large text option: bigger prayer row, everything still fits on an 8.7" tablet */
+  {
+    const context = await browser.newContext({ viewport: { width: 1005, height: 600 }, timezoneId: 'America/New_York', serviceWorkers: 'block' });
+    const page = await context.newPage();
+    page.errors = []; page.on('pageerror', (e) => page.errors.push(e.message));
+    await page.addInitScript(() => localStorage.setItem('azan-clock-config-v1', JSON.stringify({ slideEvery: 0 })));
+    await page.clock.setFixedTime(new Date('2026-11-18T13:43:05-05:00'));
+    await page.goto(URL_);
+    await page.waitForTimeout(500);
+    const size = (sel) => page.$eval(sel, (e) => parseFloat(getComputedStyle(e).fontSize));
+    const before = { time: await size('#p-dhuhr .time'), iq: await size('#p-dhuhr .iq') };
+    await page.click('#setBtn');
+    await page.waitForTimeout(500);
+    await page.check('#s-largetext');
+    await page.click('#settingsForm button[type=submit]');
+    await page.waitForTimeout(800);
+    const after = { time: await size('#p-dhuhr .time'), iq: await size('#p-dhuhr .iq') };
+    ok('large text: prayer times and iqamah get bigger', after.time > before.time * 1.3 && after.iq > before.iq * 1.6,
+      'time ' + before.time + ' -> ' + after.time + ', iqamah ' + before.iq + ' -> ' + after.iq);
+    const fits = await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight &&
+      [...document.querySelectorAll('.prayer')].every((p) => p.scrollWidth <= p.clientWidth + 1) &&
+      document.querySelector('.prayers').getBoundingClientRect().right <= innerWidth);
+    ok('large text: everything still fits on an 8.7" tablet', fits);
+    ok('large text is saved', await page.evaluate(() => JSON.parse(localStorage.getItem('azan-clock-config-v1')).largeText === true));
+    ok('no page errors (15)', !page.errors.length, page.errors.join(';'));
+    await context.close();
+  }
+
   await browser.close();
   console.log(results.join('\n'));
 })();
