@@ -135,7 +135,8 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 - **Autoplay.** Browsers block sound until a user gesture. The kiosk must enable audio autoplay
   (a Fully Kiosk setting, or Chromium's `--autoplay-policy=no-user-gesture-required`). The page
   shows a "Tap to enable adhan sound" button when sound is locked.
-- **Adhan playback with a real recording has not been tested** on the target hardware.
+- **Adhan recording:** `assets/audio/adhan.mp3` (Ahmed Al-Haddad, supplied by the owner) plays at
+  every prayer, Fajr included; browser tests check it. Not yet heard on the target hardware.
 - **Mawaqit sync is untested against the live site.** It was only tested against a simulated
   mosque page. A browser will refuse to load mawaqit.net cross-origin unless the kiosk permits
   it. Once hosted on Cloudflare Pages, a small Pages Function can fetch the feed server-side.
@@ -170,7 +171,7 @@ Defaults: Queens, New York (40.7282, -73.7949), ISNA 15/15, standard Asr (1x sha
 `npm test` runs `tests/prayer-times.test.mjs` (table below, Hanafi, Hijri, iqamah rules) and
 `tests/slides.test.mjs` (content files complete, quiet times, adhkar windows, rotation,
 reminders before prayers) and `tests/updates.test.mjs` (quiet-time reload rule, settings.json
-merge). `node tests/browser/behavior.cjs` runs 74 browser checks with a fake clock (needs Playwright and
+merge). `node tests/browser/behavior.cjs` runs 76 browser checks with a fake clock (needs Playwright and
 `python3 -m http.server 8080`).
 
 ISNA, standard Asr. Computed times should match within one minute:

@@ -159,9 +159,11 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     await context.close();
   }
 
-  /* 7. reminder slides: show, close, pause during prayer */
+  /* 7. reminder slides: show, close, pause during prayer. The adhan recording plays in real time
+     while this test's clock runs fast, so use the short chime here (blocks 14b-c test the mp3). */
   {
     const { context, page } = await fresh();
+    await page.route('**/*.mp3', (r) => r.fulfill({ status: 404, body: '' }));
     await page.clock.install({ time: new Date('2026-11-17T09:00:05-05:00') });
     await page.goto(URL_);
     await page.clock.runFor(30000);
@@ -352,6 +354,21 @@ const ok = (name, cond, extra) => { results.push((cond ? 'PASS ' : 'FAIL ') + na
     await page.waitForTimeout(800);
     ok('with autoplay allowed, sound is on at start with no tap', await page.$eval('#soundPill', (e) => e.hidden));
     ok('the adhan player is the static audio tag', await page.$eval('#adhanPlayer', (e) => e.tagName === 'AUDIO'));
+    await context.close();
+    /* 14b-c. the bundled recording plays at Dhuhr, and at Fajr too while there is no adhan-fajr.mp3 */
+    for (const [label, start] of [['Dhuhr', '2026-11-17T11:40:50-05:00'], ['Fajr', '2026-11-17T05:24:00-05:00']]) {
+      const c = await auto.newContext({ viewport: { width: 1280, height: 800 }, timezoneId: 'America/New_York', serviceWorkers: 'block' });
+      const pg = await c.newPage();
+      await pg.clock.install({ time: new Date(start) });
+      await pg.goto(URL_);
+      let up = false;
+      for (let i = 0; i < 40 && !up; i++) { await pg.clock.runFor(5000); up = await pg.$eval('#adhan', (e) => !e.hidden); }
+      await pg.waitForTimeout(2500);
+      const p = await pg.$eval('#adhanPlayer', (e) => ({ src: e.currentSrc, playing: !e.paused, t: e.currentTime, d: e.duration }));
+      ok(label + ' adhan plays assets/audio/adhan.mp3', up && /assets\/audio\/adhan\.mp3$/.test(p.src) && p.playing && p.t > 0.5,
+        p.src.split('/').pop() + ' at ' + p.t.toFixed(1) + ' s of ' + Math.round(p.d) + ' s');
+      await c.close();
+    }
     await auto.close();
   }
 
