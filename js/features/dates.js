@@ -3,13 +3,22 @@
 import { $, html, readNumber, setText } from '../core/dom.js';
 import { METHOD_LABEL } from './prayer-times.js';
 
+/* Month names come from this list, not from the browser: some Android browsers return the
+   Gregorian name ("9 June 1448") for the Hijri month. The browser supplies only the numbers. */
+export const HIJRI_MONTHS = ['Muharram', 'Safar', 'Rabiʻ I', 'Rabiʻ II', 'Jumada I', 'Jumada II',
+  'Rajab', 'Shaʻban', 'Ramadan', 'Shawwal', 'Dhuʻl-Qiʻdah', 'Dhuʻl-Hijjah'];
+
 /* "6 Jumada II 1448 AH" for the given instant, using the Umm al-Qura calendar. */
 export function hijriDate(date) {
   try {
-    const f = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' });
+    const f = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'numeric', year: 'numeric' });
+    if (!/^islamic/.test(f.resolvedOptions().calendar)) return '';
     const p = f.formatToParts(date);
     const get = (t) => { const x = p.filter((q) => q.type === t)[0]; return x ? x.value : ''; };
-    return get('day') + ' ' + get('month') + ' ' + get('year') + ' AH';
+    const month = HIJRI_MONTHS[Number(get('month')) - 1];
+    const year = get('year').replace(/\D/g, '');
+    if (!month || !year) return '';
+    return Number(get('day')) + ' ' + month + ' ' + year + ' AH';
   } catch (e) { return ''; }
 }
 

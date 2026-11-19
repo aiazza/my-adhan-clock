@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { rawTimes, dayTimes, iqamahTime, SIX } from '../js/features/prayer-times.js';
-import { hijriFor } from '../js/features/dates.js';
+import { hijriFor, hijriDate } from '../js/features/dates.js';
 import { merge } from '../js/core/config.js';
 import prayerTimes from '../js/features/prayer-times.js';
 
@@ -96,4 +96,18 @@ test('16 November 2026 is 6 Jumada II 1448 before Maghrib, 7 after', () => {
   assert.equal(hijriFor(new Date(2026, 10, 16, 12, 0), maghrib, 0), '6 Jumada II 1448 AH');
   assert.equal(hijriFor(new Date(2026, 10, 16, 17, 0), maghrib, 0), '7 Jumada II 1448 AH');
   assert.equal(hijriFor(new Date(2026, 10, 16, 12, 0), maghrib, -1), '5 Jumada II 1448 AH');
+});
+
+test('Hijri month names come from our own list (an Android browser said "9 June 1448")', () => {
+  const RealDTF = Intl.DateTimeFormat;
+  /* A browser whose long Hijri month names are the Gregorian ones. */
+  Intl.DateTimeFormat = function (loc, opts) {
+    const f = new RealDTF(loc, opts);
+    if (!opts || opts.month !== 'long') return f;
+    return { resolvedOptions: () => f.resolvedOptions(), formatToParts: (d) => f.formatToParts(d).map((x) => (x.type === 'month' ? { type: 'month', value: 'June' } : x)) };
+  };
+  try {
+    assert.equal(hijriDate(new Date(2026, 10, 18, 12, 0)), '8 Jumada II 1448 AH');
+    assert.equal(hijriDate(new Date(2027, 1, 20, 12, 0)).split(' ').slice(1, 2)[0], 'Ramadan');
+  } finally { Intl.DateTimeFormat = RealDTF; }
 });
